@@ -15,5 +15,6 @@ sealed class TimelinePageEvent {
 
     sealed class Action : TimelinePageEvent() {
         data class OnRefresh(val loading: Boolean) : Action()
+        data class OnDelete(val timelineId: Long) : Action()
     }
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Popup
+import com.xiaoyv.bangumi.shared.core.utils.bgmEmojis
 import com.xiaoyv.bangumi.shared.core.utils.bgmReactionKey
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeReaction
@@ -72,7 +73,8 @@ fun ReactionGroup(
         itemVerticalAlignment = itemVerticalAlignment,
     ) {
         reactions.fastForEach { item ->
-            bgmReactionKey[item.value]?.let { image ->
+            val image = bgmReactionKey[item.value] ?: bgmEmojis[item.value]?.image
+            image?.let {
                 var targetScale by remember { mutableStateOf(1f) }
                 val scope = rememberCoroutineScope()
                 val scale by animateFloatAsState(

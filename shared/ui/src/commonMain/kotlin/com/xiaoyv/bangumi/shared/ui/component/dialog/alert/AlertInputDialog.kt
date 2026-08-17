@@ -1,15 +1,14 @@
 package com.xiaoyv.bangumi.shared.ui.component.dialog.alert
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +22,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_cancel
@@ -31,6 +31,9 @@ import com.xiaoyv.bangumi.shared.core.utils.digit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun BgmAlertInputDialog(
@@ -51,39 +54,14 @@ fun BgmAlertInputDialog(
             mutableStateOf(TextFieldValue(data.value, TextRange(data.value.length)))
         }
 
-        AlertDialog(
+        OverlayDialog(
+            show = true,
             modifier = modifier.padding(WindowInsets.ime.asPaddingValues()),
+            title = data.title,
             onDismissRequest = { state.dismiss() },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        state.dismiss()
-                        scope.launch {
-                            delay(200)
-                            onConfirm(data.copy(value = text.text.trim()))
-                        }
-                    },
-                    content = { Text(confirm) }
-                )
-            },
-            dismissButton = cancel?.let {
-                {
-                    TextButton(
-                        onClick = {
-                            state.dismiss()
-                            scope.launch {
-                                delay(200)
-                                onCancel()
-                            }
-                        },
-                        content = { Text(cancel) }
-                    )
-                }
-            },
-            icon = icon,
-            title = data.title?.let { { Text(it) } },
-            text = {
-                OutlinedTextField(
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                MiuixTextField(
                     modifier = Modifier
                         .focusRequester(focusRequester)
                         .fillMaxWidth(),
@@ -92,14 +70,38 @@ fun BgmAlertInputDialog(
                     singleLine = data.singleLine,
                     minLines = data.minLines,
                     maxLines = data.maxLines,
-                    onValueChange = { text = if (data.onlyNumber) it.digit(text) else it }
+                    onValueChange = { text = if (data.onlyNumber) it.digit(text) else it },
                 )
-
                 LaunchedEffect(Unit) {
                     focusRequester.requestFocus()
                 }
-            },
-            properties = state.properties
-        )
+                Spacer(modifier = Modifier.height(12.dp))
+                TextButton(
+                    text = confirm,
+                    onClick = {
+                        state.dismiss()
+                        scope.launch {
+                            delay(200)
+                            onConfirm(data.copy(value = text.text.trim()))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (cancel != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(
+                        text = cancel,
+                        onClick = {
+                            state.dismiss()
+                            scope.launch {
+                                delay(200)
+                                onCancel()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
     }
 }

@@ -18,12 +18,12 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -99,17 +99,7 @@ fun <T> StateLayout(
                 isRefreshing = true
                 onRefresh(false)
             },
-            enabled = LocalCollapsingPullRefresh.current
-            ,
-            indicator = {
-                Indicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = pullRefreshIndicatorPaddingTop),
-                    isRefreshing = isRefreshing,
-                    state = pullRefreshState
-                )
-            }
+            enabled = LocalCollapsingPullRefresh.current,
         ) {
             StateLayoutImpl(
                 modifier = Modifier.fillMaxSize(),
@@ -195,8 +185,8 @@ fun StateEmptyLayout(onRefresh: () -> Unit) {
     ) {
         Text(text = "暂无内容")
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedButton(onRefresh) {
-            Text(text = stringResource(Res.string.global_refresh))
+        Button(onClick = onRefresh) {
+            MiuixText(text = stringResource(Res.string.global_refresh))
         }
     }
 }
@@ -234,8 +224,11 @@ fun StateErrorLayout(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(onClick = { onRefresh(true) }) {
-            Text(text = stringResource(Res.string.global_refresh))
+        Button(
+            onClick = { onRefresh(true) },
+            colors = ButtonDefaults.buttonColorsPrimary(),
+        ) {
+            MiuixText(text = stringResource(Res.string.global_refresh))
         }
 
         Spacer(modifier = Modifier.weight(1f - clampedBias))

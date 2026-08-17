@@ -2,9 +2,12 @@ package com.xiaoyv.bangumi.shared
 
 import android.app.Application
 import android.content.ClipData
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.ui.platform.AndroidUiDispatcher
@@ -91,6 +94,30 @@ actual object System {
     actual suspend fun cleanCache(): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             runCatching { application.cacheDir.deleteRecursively() }
+        }
+    }
+
+    actual suspend fun saveImageFromUrl(url: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val bytes = java.net.URL(url).openStream().use { it.readBytes() }
+            val name = "bgm_${currentTimeMillis()}.jpg"
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, name)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Bangumi")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+            }
+            val resolver = application.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: error("insert failed")
+            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("write failed")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.clear()
+                values.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ package com.xiaoyv.bangumi.shared.data.model.response.bgm
 
 import androidx.compose.runtime.Immutable
 import com.xiaoyv.bangumi.shared.core.types.FeatureType
+import com.xiaoyv.bangumi.shared.core.types.SubjectType
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingIndication
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingNavigationAnimation
@@ -52,6 +53,10 @@ data class ComposeSetting(
 
         @SerialName("timeMachineGridLimit") val timeMachineGridLimit: Int = 10,
         @SerialName("trackingGridLineLimit") val trackingGridLineLimit: Int = 4,
+        @SerialName("searchSubjectType") val searchSubjectType: Int = SubjectType.ANIME,
+        @SerialName("themeColor") val themeColor: Long = 0xFFB44C71,
+        @SerialName("monetTheme") val monetTheme: Boolean = false,
+        @SerialName("hiddenHomeShortcuts") val hiddenHomeShortcuts: List<String> = emptyList(),
     ) {
         companion object {
             val Default = UIConfig()

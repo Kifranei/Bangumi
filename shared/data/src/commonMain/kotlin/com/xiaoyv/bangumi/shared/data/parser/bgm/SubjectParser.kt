@@ -19,9 +19,12 @@ import com.xiaoyv.bangumi.shared.core.utils.infoYearMonthDayRegex
 import com.xiaoyv.bangumi.shared.core.utils.infoYearMonthRegex
 import com.xiaoyv.bangumi.shared.core.utils.parseStar
 import com.xiaoyv.bangumi.shared.core.utils.sanitizeImageUrl
+import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeCollection
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeComment
+import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeEmojiParam
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeImages
+import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeReaction
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeRating
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeTag
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.index.ComposeIndex
@@ -34,6 +37,7 @@ import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubjectW
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.user.ComposeUser
 import com.xiaoyv.bangumi.shared.data.model.response.image.ComposeGallery
 import com.xiaoyv.bangumi.shared.data.parser.BaseParser
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentMap
@@ -133,28 +137,81 @@ class SubjectParser : BaseParser() {
         )
     }
 
-    suspend fun Element.fetchSubjectCommentConverted(): List<ComposeComment> {
+    suspend fun Element.fetchSubjectCommentConverted(subjectId: Long): List<ComposeComment> {
         requireNoError()
+        val likes = parseDataLikesList()
         return select("#comment_box > .item").map {
+            val username = it.attr("data-item-user")
             val avatarUrl = it.select("a.avatar > span").styleAvatarUrl()
             val comment = it.select(".comment").text()
             val text = it.select(".text small").text()
+            val parsedLike = it.select(".like_dropdown").parserLikeParam()
+            val likesGridId = it.select(".likes_grid").attr("id")
+                .substringAfter("likes_grid_", missingDelimiterValue = "")
+                .trim()
+            val likeCommentId = parsedLike.likeCommentId.ifBlank { likesGridId }.ifBlank { username }
+            val likeParam = if (parsedLike.enable && parsedLike.likeCommentId.isNotBlank()) {
+                parsedLike
+            } else {
+                ComposeEmojiParam(
+                    enable = true,
+                    likeType = parsedLike.likeType.ifBlank { CommentType.SUBJECT.toString() },
+                    likeMainId = parsedLike.likeMainId.ifBlank { subjectId.toString() },
+                    likeCommentId = likeCommentId,
+                )
+            }
 
             ComposeComment(
-                id = it.attr("data-item-user"),
+                id = username,
                 type = CommentType.SUBJECT,
                 comment = comment,
                 time = text.substringAfterLast("@").trim(),
                 collectType = CollectionType.from(text.substringBefore("@")),
                 star = it.parseStar(),
+                emojiParam = likeParam,
+                reactions = likes[likeCommentId] ?: likes[likesGridId] ?: likes[username] ?: persistentListOf(),
                 user = ComposeUser(
-                    id = avatarUrl.avatarUrlId(it.attr("data-item-user")),
-                    username = it.attr("data-item-user"),
+                    id = avatarUrl.avatarUrlId(username),
+                    username = username,
                     avatar = ComposeImages.fromUrl(avatarUrl),
                     nickname = it.select(".text a.l").text()
                 ),
             )
         }
+    }
+
+    private fun Element.parseDataLikesList(): Map<String, SerializeList<ComposeReaction>> {
+        val text = html()
+        val key = "data_likes_list"
+        val keyIndex = text.indexOf(key)
+        if (keyIndex == -1) return emptyMap()
+        val eqIndex = text.indexOf('=', startIndex = keyIndex)
+        if (eqIndex == -1) return emptyMap()
+        val start = text.indexOf('{', startIndex = eqIndex)
+        if (start == -1) return emptyMap()
+        var depth = 0
+        var quote: Char? = null
+        var escape = false
+        for (pos in start until text.length) {
+            val c = text[pos]
+            if (quote != null) {
+                if (escape) escape = false
+                else if (c == '\\') escape = true
+                else if (c == quote) quote = null
+                continue
+            }
+            when (c) {
+                '"', '\'' -> quote = c
+                '{' -> depth++
+                '}' -> {
+                    depth--
+                    if (depth == 0) {
+                        return ComposeReaction.fromJson(text.substring(start, pos + 1))
+                    }
+                }
+            }
+        }
+        return emptyMap()
     }
 
     suspend fun Element.fetchIndexEpListConverted(): List<ComposeIndexEp> {

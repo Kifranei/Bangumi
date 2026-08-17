@@ -18,7 +18,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,6 +56,7 @@ import com.xiaoyv.bangumi.shared.ui.composition.TabTokens
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIconsMirrored
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import com.xiaoyv.bangumi.shared.ui.view.magnet.MikanMagnetItem
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -97,7 +98,7 @@ private fun GardenScreen(
     onUiEvent: (GardenEvent.UI) -> Unit,
     onActionEvent: (GardenEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -177,7 +178,7 @@ private fun GardenScreenContent(
                     }
                 ) {
                     Icon(
-                        imageVector = BgmIcons.Search,
+                        imageVector = BgmMiuixIcons.Search,
                         contentDescription = stringResource(Res.string.global_search)
                     )
                 }

@@ -29,5 +29,11 @@ sealed class SubjectDetailEvent {
             val episodes: List<ComposeEpisode>,
             @field:CollectionEpisodeType val type: Int,
         ) : Action()
+
+        data class OnReactionClick(
+            val commentId: String,
+            val value: String,
+            val displayId: String = commentId,
+        ) : Action()
     }
 }

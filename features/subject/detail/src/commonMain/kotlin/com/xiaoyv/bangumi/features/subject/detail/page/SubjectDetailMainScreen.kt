@@ -26,8 +26,11 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,6 +83,7 @@ import com.xiaoyv.bangumi.shared.ui.component.chart.RatingBarChart
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.sheet.rememberSheetDialogState
+
 import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
 import com.xiaoyv.bangumi.shared.ui.component.image.StateImage
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLazyColumn
@@ -185,6 +189,16 @@ fun SubjectDetailMainScreen(
             CommentItem(
                 modifier = Modifier.fillMaxWidth(),
                 item = item,
+                reactions = state.reactionsOf(item),
+                onClickReaction = {
+                    onActionEvent(
+                        SubjectDetailEvent.Action.OnReactionClick(
+                            commentId = item.emojiParam.likeCommentId.ifBlank { item.id },
+                            displayId = item.id,
+                            value = it.value,
+                        )
+                    )
+                },
                 onClickUser = { onUiEvent(SubjectDetailEvent.UI.OnNavScreen(Screen.UserDetail(it))) },
                 onClick = {
 
@@ -808,5 +822,7 @@ private fun SubjectDetailComment(
             .fillMaxWidth()
             .padding(top = LayoutPadding, bottom = LayoutPaddingHalf),
         title = stringResource(Res.string.global_spit_out),
+        action = stringResource(Res.string.subject_action_more),
+        onActionClick = { onUiEvent(SubjectDetailEvent.UI.OnSelectedPageType(SubjectDetailTab.COMMENT)) },
     )
 }

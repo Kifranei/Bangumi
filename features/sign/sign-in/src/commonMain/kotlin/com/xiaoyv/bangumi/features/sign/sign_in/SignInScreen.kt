@@ -25,11 +25,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,6 +75,7 @@ import com.xiaoyv.bangumi.features.sign.sign_in.business.SignInViewModel
 import com.xiaoyv.bangumi.shared.core.mvi.BaseState
 import com.xiaoyv.bangumi.shared.core.types.LoadingState
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.button.LoadingButton
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.AlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertDialog
@@ -87,6 +86,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
 import com.xiaoyv.bangumi.shared.ui.theme.contentMargin
+import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import org.jetbrains.compose.resources.stringResource
 import org.orbitmvi.orbit.compose.collectAsState
 
@@ -159,9 +159,9 @@ private fun SignInScreen(
     onUiEvent: (SignInEvent.UI) -> Unit,
     onActionEvent: (SignInEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -210,7 +210,7 @@ private fun SignInScreenContent(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        OutlinedTextField(
+        MiuixTextField(
             modifier = Modifier
                 .semantics { contentDescription = "username" }
                 .focusRequester(emailFocusRequester)
@@ -221,11 +221,10 @@ private fun SignInScreenContent(
             onValueChange = { onActionEvent(SignInEvent.Action.OnEmailChange(it)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-            placeholder = { Text(text = stringResource(Res.string.global_email)) },
-            label = { Text(text = stringResource(Res.string.login_email)) }
+            label = stringResource(Res.string.login_email),
         )
 
-        OutlinedTextField(
+        MiuixTextField(
             modifier = Modifier
                 .semantics { contentDescription = "password" }
                 .fillMaxWidth()
@@ -238,8 +237,7 @@ private fun SignInScreenContent(
                 keyboardType = KeyboardType.Password
             ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            placeholder = { Text(text = stringResource(Res.string.global_password)) },
-            label = { Text(text = stringResource(Res.string.login_password)) },
+            label = stringResource(Res.string.login_password),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
@@ -250,7 +248,7 @@ private fun SignInScreenContent(
             }
         )
 
-        OutlinedTextField(
+        MiuixTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = contentMargin),
@@ -258,8 +256,7 @@ private fun SignInScreenContent(
             onValueChange = { onActionEvent(SignInEvent.Action.OnCodeChange(it)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            placeholder = { Text(text = stringResource(Res.string.login_verify_code)) },
-            label = { Text(text = stringResource(Res.string.login_verify_code)) },
+            label = stringResource(Res.string.login_verify_code),
             trailingIcon = {
                 Box(
                     modifier = Modifier

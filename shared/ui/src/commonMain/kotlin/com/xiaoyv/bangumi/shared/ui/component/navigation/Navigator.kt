@@ -153,6 +153,18 @@ fun NavBackStack<NavKey>.navigate(
     }
 }
 
+fun NavBackStack<NavKey>.selectBottomTab(tab: NavKey, start: NavKey) {
+    val startIndex = indexOfFirst { it == start }
+    if (startIndex >= 0) {
+        if (startIndex > 0) subList(0, startIndex).clear()
+        if (size > 1) subList(1, size).clear()
+    } else {
+        if (isNotEmpty()) removeLastOrNull()
+        add(start)
+    }
+    if (tab != start && lastOrNull() != tab) add(tab)
+}
+
 fun NavBackStack<NavKey>.moveTop(key: NavKey) {
     val index = indexOf(key)
     if (index == -1) {

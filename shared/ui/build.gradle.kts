@@ -14,6 +14,11 @@ kotlin {
 
             api(projects.shared.uiLiquid)
             api(projects.shared.uiMaterial3)
+
+            api(libs.miuix.ui)
+            api(libs.miuix.preference)
+            api(libs.miuix.icons)
+            api(libs.miuix.blur)
         }
     }
 }

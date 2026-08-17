@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,6 +27,7 @@ import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.subjectTypeTabs
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
@@ -62,7 +63,7 @@ private fun TagDetailScreen(
     onActionEvent: (TagDetailEvent.Action) -> Unit,
 ) {
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -70,7 +71,7 @@ private fun TagDetailScreen(
                 actions = {
                     IconButton(onClick = { onUiEvent(TagDetailEvent.UI.OnNavScreen(Screen.SearchInput())) }) {
                         Icon(
-                            imageVector = BgmIcons.Search,
+                            imageVector = BgmMiuixIcons.Search,
                             contentDescription = stringResource(Res.string.global_search)
                         )
                     }

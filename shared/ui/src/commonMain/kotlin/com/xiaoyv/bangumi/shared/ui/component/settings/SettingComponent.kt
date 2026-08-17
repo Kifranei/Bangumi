@@ -1,41 +1,43 @@
 package com.xiaoyv.bangumi.shared.ui.component.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
-import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.AlertOptionDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertInputDialog
-import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertInputDialogState
-import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPaddingHalf
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIconsMirrored
-import com.xiaoyv.bangumi.shared.ui.theme.contentMargin
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.DropdownColors
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * [SettingContainer]
@@ -46,6 +48,7 @@ import com.xiaoyv.bangumi.shared.ui.theme.contentMargin
 @Composable
 fun SettingContainer(
     modifier: Modifier = Modifier,
+    title: String? = null,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     label: @Composable (() -> Unit)? = null,
@@ -56,24 +59,19 @@ fun SettingContainer(
             .fillMaxWidth()
             .then(modifier),
         verticalArrangement = verticalArrangement,
-        horizontalAlignment = horizontalAlignment
+        horizontalAlignment = horizontalAlignment,
     ) {
-        if (label != null) Box(
+        when {
+            title != null -> SmallTitle(text = title)
+            label != null -> label()
+        }
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = contentMargin)
-                .padding(top = contentMargin, bottom = contentMargin / 2),
-            content = {
-                CompositionLocalProvider(
-                    value = LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    content = { label() }
-                )
-            }
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            insideMargin = PaddingValues(0.dp),
+            content = content,
         )
-        content()
     }
 }
 
@@ -81,65 +79,68 @@ fun SettingContainer(
 fun SettingItem(
     modifier: Modifier = Modifier,
     title: String,
+    summary: String? = null,
     icon: ImageVector? = null,
     leadingContent: @Composable (() -> Unit)? = icon?.let {
         {
             Icon(imageVector = icon, contentDescription = title)
         }
     },
-    trailingContent: @Composable (() -> Unit)? = {
-        SettingItemTrailing()
-    },
+    trailingContent: @Composable (() -> Unit)? = DefaultSettingTrailing,
     supportingContent: @Composable (() -> Unit)? = null,
     divider: Boolean = false,
     colors: ListItemColors = ListItemDefaults.colors(),
     textStyle: TextStyle = LocalTextStyle.current,
     onClick: () -> Unit = {},
 ) {
-    ListItem(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = LayoutPaddingHalf / 2)
-            .fillMaxWidth()
-            .then(modifier),
-        headlineContent = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = title,
-                style = textStyle,
-            )
-        },
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        supportingContent = supportingContent,
-        colors = colors
-    )
-    if (divider) {
-        BgmHorizontalDivider()
+    val titleColor = if (textStyle.color != Color.Unspecified) {
+        BasicComponentDefaults.titleColor(color = textStyle.color)
+    } else {
+        BasicComponentDefaults.titleColor()
+    }
+    if (trailingContent === DefaultSettingTrailing) {
+        ArrowPreference(
+            title = title,
+            modifier = modifier,
+            titleColor = titleColor,
+            summary = summary,
+            startAction = leadingContent,
+            onClick = onClick,
+        )
+    } else {
+        BasicComponent(
+            modifier = modifier,
+            title = title,
+            titleColor = titleColor,
+            summary = summary,
+            startAction = leadingContent,
+            endActions = trailingContent?.let { { it() } },
+            bottomAction = supportingContent,
+            onClick = onClick,
+        )
     }
 }
+
+private val DefaultSettingTrailing: @Composable () -> Unit = { SettingItemTrailing() }
 
 @Composable
 fun <T : Any> SettingOptionItem(
     title: String,
     value: String,
     items: SerializeList<ComposeTextTab<T>>,
+    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     onClick: (T) -> Unit,
 ) {
-    val dialogState = rememberAlertDialogState()
-
-    AlertOptionDialog(
+    val labels = items.map { it.displayText() }
+    val selectedIndex = items.indexOfFirst { it.displayText() == value }.let { if (it < 0) 0 else it }
+    OverlayDropdownPreference(
+        items = labels,
+        selectedIndex = selectedIndex,
         title = title,
-        state = dialogState,
-        items = items,
-        onClick = { tab, index ->
-            onClick(tab.type)
-        }
-    )
-    SettingItem(
-        title = title,
-        trailingContent = { SettingItemTrailing(text = value) },
-        onClick = { dialogState.show() }
+        dropdownColors = dropdownColors,
+        onSelectedIndexChange = { index ->
+            items.getOrNull(index)?.let { onClick(it.type) }
+        },
     )
 }
 
@@ -150,13 +151,11 @@ fun SettingSwitchItem(
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
 ) {
-    SettingItem(
+    SwitchPreference(
+        checked = value,
+        onCheckedChange = onValueChange,
         title = title,
-        trailingContent = { Switch(checked = value, onCheckedChange = onValueChange) },
-        supportingContent = if (desc == null) null else {
-            { Text(text = desc) }
-        },
-        onClick = { onValueChange(!value) }
+        summary = desc,
     )
 }
 
@@ -172,13 +171,13 @@ fun SettingInputItem(
         state = dialogState,
         onConfirm = {
             onClick(it.value)
-        }
+        },
     )
 
-    SettingItem(
+    ArrowPreference(
         title = title,
-        trailingContent = { SettingItemTrailing(text = value) },
-        onClick = { dialogState.show { it.copy(value = value, title = title) } }
+        summary = value,
+        onClick = { dialogState.show { it.copy(value = value, title = title) } },
     )
 }
 
@@ -191,16 +190,16 @@ fun SettingItemTrailing(
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(LayoutPaddingHalf),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!text.isNullOrBlank()) {
             Text(
                 modifier = Modifier.widthIn(max = 120.dp),
                 text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.MiddleEllipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
         if (imageVector != null) {

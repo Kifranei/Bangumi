@@ -1,32 +1,20 @@
 package com.xiaoyv.bangumi.shared.ui.component.pager
 
 import androidx.annotation.FloatRange
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerScope
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SecondaryScrollableTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,12 +27,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
 import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopState
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.LocalDoubleTapToScrollTopState
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPaddingHalf
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import kotlinx.coroutines.CoroutineScope
@@ -88,105 +76,58 @@ fun <Key : Any> BgmTabHorizontalPager(
     val scope = rememberCoroutineScope()
     val currentPage = pagerState.currentPage.coerceAtMost(tabs.size - 1)
     var inputType by remember { mutableStateOf(PointerType.Touch) }
+    val doubleTapStates = remember(tabs.size) {
+        List(tabs.size) { DoubleTapToScrollTopState() }
+    }
+    val parentDoubleTapState = LocalDoubleTapToScrollTopState.current
+
+    androidx.compose.runtime.DisposableEffect(parentDoubleTapState, currentPage, doubleTapStates) {
+        val currentState = doubleTapStates.getOrNull(currentPage)
+        if (currentState != null) parentDoubleTapState?.delegateTo(currentState)
+        onDispose {
+            if (currentState != null) parentDoubleTapState?.clearDelegate(currentState)
+        }
+    }
+
+    val tabLabels = tabs.map { it.displayText() }
+    val pageWithDoubleTapState: @Composable (Int) -> Unit = { page ->
+        if (parentDoubleTapState == null) {
+            pageContent(page)
+        } else {
+            CompositionLocalProvider(
+                LocalDoubleTapToScrollTopState provides doubleTapStates[page],
+            ) {
+                pageContent(page)
+            }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         if (tabs.size > 1) {
-            SecondaryScrollableTabRow(
+            BgmTabRow(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
                     .semantics { contentDescription = "scrollable_tab" },
+                tabs = tabLabels,
                 selectedTabIndex = currentPage,
-                edgePadding = edgePadding,
-                divider = {},
-                indicator = {
-                    val indicatorHeight = 4.dp
-                    val currentPage by remember { derivedStateOf { pagerState.currentPage } }
-                    val fraction by remember { derivedStateOf { pagerState.currentPageOffsetFraction } }
-
-                    Box(
-                        Modifier
-                            .tabIndicatorLayout { measurable, constraints, tabPositions ->
-                                if (tabPositions.isEmpty()) {
-                                    return@tabIndicatorLayout layout(0, 0) {}
-                                }
-
-                                val currentTab = tabPositions[currentPage]
-                                val nextTab = tabPositions.getOrNull(currentPage + 1)
-                                val preTab = tabPositions.getOrNull(currentPage - 1)
-
-                                val targetWidth = when {
-                                    fraction > 0 -> lerp(currentTab.contentWidth, requireNotNull(nextTab).contentWidth, fraction)
-                                    fraction < 0 -> lerp(requireNotNull(preTab).contentWidth, currentTab.contentWidth, 1 + fraction)
-                                    else -> currentTab.contentWidth
-                                }
-
-                                // === 偏移平滑过渡计算 (关键!) ===
-                                val targetOffset = if (nextTab != null) {
-                                    lerp(currentTab.left, nextTab.left, fraction)
-                                } else if (preTab != null) {
-                                    lerp(preTab.left, currentTab.left, 1 + fraction)
-                                } else {
-                                    currentTab.left
-                                }
-
-                                // 测量指示器 Box
-                                val placeable = measurable.measure(
-                                    constraints.copy(
-                                        minWidth = targetWidth.roundToPx(),
-                                        maxWidth = targetWidth.roundToPx(),
-                                    )
-                                )
-
-                                // 布局并放置指示器
-                                layout(targetWidth.roundToPx(), indicatorHeight.roundToPx()) {
-                                    placeable.placeRelative(targetOffset.roundToPx(), 0)
-                                }
-                            }
-                            .fillMaxWidth()
-                            .height(indicatorHeight)
-                            .background(
-                                MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                            )
-                    )
-                },
-                tabs = {
-                    tabs.forEachIndexed { index, tab ->
-                        val text = tab.displayText()
-
-                        Tab(
-                            modifier = Modifier.semantics { contentDescription = text },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selected = currentPage == index,
-                            onClick = {
-                                scope.launch {
-                                    // callback
-                                    if (index != currentPage) {
-                                        onTabSelected(index)
-                                    }
-
-                                    // Only use smooth animation when switching between two adjacent pages, otherwise select directly
-                                    if (abs(currentPage - index) > 1) {
-                                        pagerState.scrollToPage(index)
-                                    } else {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                }
-                            },
-                            text = {
-                                Text(
-                                    text = text,
-                                    style = style.copy(fontWeight = if (currentPage != index) FontWeight.Medium else FontWeight.SemiBold),
-                                )
-                            }
-                        )
+                onTabSelected = { index ->
+                    scope.launch {
+                        if (index != currentPage) {
+                            onTabSelected(index)
+                        }
+                        if (abs(currentPage - index) > 1) {
+                            pagerState.scrollToPage(index)
+                        } else {
+                            pagerState.animateScrollToPage(index)
+                        }
                     }
-                }
+                },
             )
         }
 
         if (tabs.size == 1) {
-            pageContent(0)
+            pageWithDoubleTapState(0)
         } else {
             divider()
             HorizontalPager(
@@ -208,7 +149,7 @@ fun <Key : Any> BgmTabHorizontalPager(
                 userScrollEnabled = inputType == PointerType.Touch && userScrollEnabled,
                 beyondViewportPageCount = beyondViewportPageCount,
                 key = key,
-                pageContent = { pageContent(it) }
+                pageContent = { pageWithDoubleTapState(it) }
             )
         }
     }
@@ -234,25 +175,21 @@ fun <Key : Any> BgmChipHorizontalPager(
     extra: @Composable (ColumnScope.() -> Unit)? = null,
     pageContent: @Composable (page: Int) -> Unit,
 ) {
+    val tabLabels = tabs.map { it.displayText() }
     Column(modifier = modifier) {
-        if (tabs.size > 1) LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(vertical = LayoutPaddingHalf, horizontal = 12.dp),
-            state = listState,
-            horizontalArrangement = Arrangement.spacedBy(LayoutPaddingHalf)
-        ) {
-            itemsIndexed(tabs) { index, tab ->
-                FilterChip(
-                    selected = index == pagerState.currentPage,
-                    label = { Text(text = tab.displayText()) },
-                    onClick = {
-                        onTabSelected(index)
-                        scope.launch { pagerState.scrollToPage(index) }
-                    }
-                )
-            }
+        if (tabs.size > 1) {
+            BgmTabRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = LayoutPaddingHalf),
+                tabs = tabLabels,
+                selectedTabIndex = pagerState.currentPage,
+                listState = listState,
+                onTabSelected = { index ->
+                    onTabSelected(index)
+                    scope.launch { pagerState.scrollToPage(index) }
+                },
+            )
         }
 
         if (extra != null) extra()

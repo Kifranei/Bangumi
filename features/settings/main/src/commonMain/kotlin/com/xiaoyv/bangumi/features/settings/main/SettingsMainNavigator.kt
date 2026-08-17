@@ -17,5 +17,10 @@ val settingsMainModule = module {
                 onNavUp = { navigator.goBack() }
             )
         }
+        navigation<Screen.SettingsAbout> {
+            SettingsAboutRoute(
+                onNavUp = { navigator.goBack() }
+            )
+        }
     }
 }

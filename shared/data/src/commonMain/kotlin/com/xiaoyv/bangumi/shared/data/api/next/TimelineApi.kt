@@ -43,7 +43,7 @@ interface TimelineApi {
      * @param timelineID
      */
     @DELETE("p1/timeline/{timelineID}")
-    suspend fun deleteTimeline(@Path("timelineID") timelineID: Int): HttpResponse
+    suspend fun deleteTimeline(@Path("timelineID") timelineID: Long): HttpResponse
 
     /**
      * 获取时间线

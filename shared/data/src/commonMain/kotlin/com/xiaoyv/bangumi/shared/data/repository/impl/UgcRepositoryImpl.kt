@@ -45,6 +45,9 @@ import com.xiaoyv.bangumi.shared.data.repository.datasource.createNetworkOffsetL
 import com.xiaoyv.bangumi.shared.data.repository.datasource.createNetworkPageLimitPagingPager
 import com.xiaoyv.bangumi.shared.data.repository.datasource.createPagingConfig
 import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 
 class UgcRepositoryImpl(
@@ -332,13 +335,17 @@ class UgcRepositoryImpl(
             gh = userManager.userInfo.formHash
         )
         val text = response.bodyAsText()
-        val reactionJson = defaultJson.parseToJsonElement(text)
-            .jsonObject["data"]
-            .toString()
-
-        ComposeReaction.fromJson(reactionJson).entries
-            .firstOrNull()?.value
-            .orEmpty()
+        val data = defaultJson.parseToJsonElement(text).jsonObject["data"]
+        when (data) {
+            is JsonArray -> {
+                data.map { defaultJson.decodeFromJsonElement<ComposeReaction>(it) }
+            }
+            is JsonObject -> {
+                val mapped = ComposeReaction.fromJson(data.toString())
+                mapped[id] ?: mapped.entries.firstOrNull()?.value.orEmpty()
+            }
+            else -> emptyList()
+        }
     }
 
     override suspend fun submitNewReply(action: String, params: Map<String, Any>): Result<ComposeNewReply> = client.requestWebApi {
@@ -347,5 +354,13 @@ class UgcRepositoryImpl(
 
     override suspend fun summitDollarsChat(message: String): Result<ComposeStatus> = client.requestWebApi {
         summitDollarsChat(message = message)
+    }
+
+    override suspend fun deleteTimeline(timelineId: Long): Result<Unit> = client.requestWebApi {
+        deleteTimeline(
+            tmlId = timelineId.toString(),
+            hash = userManager.userInfo.formHash,
+        )
+        Unit
     }
 }

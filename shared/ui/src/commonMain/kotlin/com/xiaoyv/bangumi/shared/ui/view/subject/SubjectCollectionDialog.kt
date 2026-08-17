@@ -106,7 +106,6 @@ fun SubjectCollectionDialog(
         sheetGesturesEnabled = scrollTop == 0,
         contentWindowInsets = { WindowInsets() },
     ) {
-
         SubjectCollectionDialogContent(
             subject = subject,
             scrollState = scrollState,

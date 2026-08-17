@@ -1,12 +1,14 @@
 package com.xiaoyv.bangumi.shared.ui.component.dialog.alert
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_cancel
@@ -14,6 +16,8 @@ import com.xiaoyv.bangumi.core_resource.resources.global_confirm
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 /**
  * [BgmAlertDialog]
@@ -32,17 +36,18 @@ fun BgmAlertDialog(
     text: @Composable (() -> Unit)? = null,
 ) {
     val showing by state.showing.collectAsStateWithLifecycle()
-    if (showing) {
-        AlertDialog(
-            modifier = modifier,
-            onDismissRequest = { state.dismiss() },
-            confirmButton = confirm,
-            dismissButton = cancel,
-            icon = icon,
-            title = title,
-            text = text,
-            properties = state.properties
-        )
+    OverlayDialog(
+        show = showing,
+        modifier = modifier,
+        onDismissRequest = { state.dismiss() },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            title?.invoke()
+            text?.invoke()
+            Spacer(modifier = Modifier.height(12.dp))
+            confirm()
+            cancel?.invoke()
+        }
     }
 }
 
@@ -61,41 +66,40 @@ fun BgmAlertDialog(
 ) {
     val scope = rememberCoroutineScope()
     val showing by state.showing.collectAsStateWithLifecycle()
-    if (showing) {
-        AlertDialog(
-            modifier = modifier,
-            onDismissRequest = { state.dismiss() },
-            confirmButton = {
+    OverlayDialog(
+        show = showing,
+        modifier = modifier,
+        title = title,
+        summary = text,
+        onDismissRequest = { state.dismiss() },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+                text = confirm,
+                onClick = {
+                    state.dismiss()
+                    scope.launch {
+                        delay(200)
+                        onConfirm()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (cancel != null) {
+                Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
+                    text = cancel,
                     onClick = {
                         state.dismiss()
                         scope.launch {
                             delay(200)
-                            onConfirm()
+                            onCancel()
                         }
                     },
-                    content = { Text(confirm) }
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            },
-            dismissButton = cancel?.let {
-                {
-                    TextButton(
-                        onClick = {
-                            state.dismiss()
-                            scope.launch {
-                                delay(200)
-                                onCancel()
-                            }
-                        },
-                        content = { Text(cancel) }
-                    )
-                }
-            },
-            icon = icon,
-            title = title?.let { { Text(it) } },
-            text = { Text(text) },
-            properties = state.properties
-        )
+            }
+        }
     }
 }
 

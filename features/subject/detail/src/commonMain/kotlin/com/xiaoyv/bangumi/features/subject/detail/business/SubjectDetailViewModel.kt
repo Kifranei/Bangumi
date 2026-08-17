@@ -21,13 +21,16 @@ import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeParade
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubject
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubjectWebInfo
 import com.xiaoyv.bangumi.shared.data.model.response.db.ComposeDoubanPhoto
+import com.xiaoyv.bangumi.shared.core.types.CommentType
 import com.xiaoyv.bangumi.shared.data.repository.CacheRepository
 import com.xiaoyv.bangumi.shared.data.repository.CollectionRepository
 import com.xiaoyv.bangumi.shared.data.repository.SubjectRepository
+import com.xiaoyv.bangumi.shared.data.repository.UgcRepository
 import com.xiaoyv.bangumi.shared.data.repository.readViewModelCache
 import com.xiaoyv.bangumi.shared.data.repository.writeViewModelCache
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.drop
@@ -49,6 +52,7 @@ class SubjectDetailViewModel(
     private val collectionRepository: CollectionRepository,
     private val personalStateStore: PersonalStateStore,
     private val userManager: UserManager,
+    private val ugcRepository: UgcRepository,
 ) : BaseViewModel<SubjectDetailState, SubjectDetailSideEffect, SubjectDetailEvent.Action>(savedStateHandle) {
     private val subjectCommentPager = subjectRepository.fetchSubjectCommentPager(args.subjectId)
 
@@ -98,6 +102,35 @@ class SubjectDetailViewModel(
             is SubjectDetailEvent.Action.DeleteCollection -> onDeleteCollection()
             is SubjectDetailEvent.Action.OnUpdateSubjectCollection -> onUpdateSubjectCollection(event.update, event.showLoadingDialog)
             is SubjectDetailEvent.Action.OnUpdateEpisodeCollection -> onUpdateEpisodeCollection(event.episodes, event.type)
+            is SubjectDetailEvent.Action.OnReactionClick -> onReactionClick(
+                commentId = event.commentId,
+                displayId = event.displayId,
+                value = event.value,
+            )
+        }
+    }
+
+    private fun onReactionClick(commentId: String, displayId: String, value: String) = action {
+        if (commentId.isBlank()) return@action
+        withActionLoading(showLoading = false) {
+            ugcRepository.submitReaction(
+                type = CommentType.SUBJECT,
+                mainId = args.subjectId,
+                id = commentId,
+                value = value,
+            )
+        }.onSuccess { reactions ->
+            val list = reactions.toPersistentList()
+            reduceContent {
+                state.copy(
+                    commentReactions = state.commentReactions.toMutableMap().apply {
+                        put(commentId, list)
+                        if (displayId.isNotBlank() && displayId != commentId) {
+                            put(displayId, list)
+                        }
+                    }.toPersistentMap()
+                )
+            }
         }
     }
 

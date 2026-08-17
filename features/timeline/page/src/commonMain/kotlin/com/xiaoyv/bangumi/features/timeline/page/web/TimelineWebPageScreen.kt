@@ -65,7 +65,7 @@ fun TimelineWebPageScreen(
     StateLazyColumn(
         modifier = Modifier.fillMaxSize(),
         pagingItems = viewModel.timelineFlow.collectAsLazyPagingItems(),
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, index -> item.id },
         contentType = { CONTENT_TYPE_TIMELINE }
     ) { item, index ->

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,6 +34,7 @@ import com.xiaoyv.bangumi.shared.core.mvi.BaseState
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingUpdateChannel
 import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.settings.SettingContainer
@@ -75,9 +76,9 @@ private fun SettingsNetworkScreen(
     onUiEvent: (SettingsNetworkEvent.UI) -> Unit,
     onActionEvent: (SettingsNetworkEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -111,7 +112,7 @@ private fun SettingsNetworkScreenContent(
     val settings = currentSettings()
 
     Column(modifier = Modifier.padding(vertical = 24.dp)) {
-        SettingContainer(label = { Text(text = stringResource(Res.string.global_domain)) }) {
+        SettingContainer(title = stringResource(Res.string.global_domain)) {
             SettingOptionItem(
                 title = stringResource(Res.string.settings_domain_bgm),
                 value = settings.network.bgmHost,
@@ -133,7 +134,7 @@ private fun SettingsNetworkScreenContent(
             )
         }
 
-        SettingContainer(label = { Text(text = stringResource(Res.string.global_req_timeout)) }) {
+        SettingContainer(title = stringResource(Res.string.global_req_timeout)) {
             SettingOptionItem(
                 title = stringResource(Res.string.settings_timeout_request),
                 value = (settings.network.connectTimeoutMillis / 1000).toString() + "s",
@@ -152,7 +153,7 @@ private fun SettingsNetworkScreenContent(
             )
         }
 
-        SettingContainer(label = { Text(text = stringResource(Res.string.global_pixiv)) }) {
+        SettingContainer(title = stringResource(Res.string.global_pixiv)) {
             SettingOptionItem(
                 title = stringResource(Res.string.settings_domain_pixiv),
                 value = TabTokens.settingPixivImgHosts
@@ -197,7 +198,7 @@ private fun SettingsNetworkScreenContent(
             )
         }
 
-        SettingContainer(label = { Text(text = stringResource(Res.string.settings_dou_ban)) }) {
+        SettingContainer(title = stringResource(Res.string.settings_dou_ban)) {
             SettingInputItem(
                 title = "Secret",
                 value = settings.network.douBanKey,
@@ -215,7 +216,7 @@ private fun SettingsNetworkScreenContent(
             )
         }
 
-        SettingContainer(label = { Text(text = stringResource(Res.string.global_update)) }) {
+        SettingContainer(title = stringResource(Res.string.global_update)) {
             SettingOptionItem(
                 title = stringResource(Res.string.settings_update_channel),
                 value = SettingUpdateChannel.string(settings.network.updateChannel),

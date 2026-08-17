@@ -6,4 +6,6 @@ package com.xiaoyv.bangumi.features.timeline.page.business
  * @author why
  * @since 2025/1/12
  */
-sealed class TimelinePageSideEffect
+sealed class TimelinePageSideEffect {
+    data object OnDeleted : TimelinePageSideEffect()
+}

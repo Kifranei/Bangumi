@@ -2,14 +2,16 @@ package com.xiaoyv.bangumi.features.main.tab.topic
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.launch
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_community
 import com.xiaoyv.bangumi.features.main.tab.topic.business.TopicEvent
@@ -24,6 +26,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import com.xiaoyv.bangumi.shared.ui.theme.PreviewColumn
 import org.jetbrains.compose.resources.stringResource
 import org.orbitmvi.orbit.compose.collectAsState
@@ -62,7 +65,9 @@ private fun TopicScreen(
         modifier = Modifier.fillMaxSize(),
         baseState = baseState,
     ) { state ->
-        Scaffold(
+        val pagerState = rememberPagerState { state.tabs.size }
+        val scope = rememberCoroutineScope()
+        BgmScaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 BgmTopAppBar(
@@ -71,14 +76,18 @@ private fun TopicScreen(
                     actions = {
                         IconButton(onClick = { onUiEvent(TopicEvent.UI.OnNavScreen(Screen.SearchInput())) }) {
                             Icon(
-                                BgmIcons.Search,
+                                BgmMiuixIcons.Search,
                                 contentDescription = null
                             )
                         }
                         DropMenuActionButton(
-                            options = state.actions,
-                            onOptionClick = {
-                                onActionEvent(TopicEvent.Action.OnChangeType(it.type))
+                            options = state.tabs,
+                            onOptionClick = { tab ->
+                                val index = state.tabs.indexOfFirst { it.type == tab.type }
+                                if (index >= 0) {
+                                    onActionEvent(TopicEvent.Action.OnChangeType(tab.type))
+                                    scope.launch { pagerState.scrollToPage(index) }
+                                }
                             }
                         )
                     }
@@ -88,6 +97,7 @@ private fun TopicScreen(
             TopicScreenContent(
                 modifier = Modifier.padding(it),
                 state = state,
+                pagerState = pagerState,
                 onUiEvent = onUiEvent,
                 onActionEvent = onActionEvent
             )
@@ -100,12 +110,14 @@ private fun TopicScreen(
 private fun TopicScreenContent(
     modifier: Modifier,
     state: TopicState,
+    pagerState: androidx.compose.foundation.pager.PagerState,
     onUiEvent: (TopicEvent.UI) -> Unit,
     onActionEvent: (TopicEvent.Action) -> Unit,
 ) {
     BgmTabHorizontalPager(
         modifier = modifier.fillMaxSize(),
-        tabs = state.tabs
+        tabs = state.tabs,
+        pagerState = pagerState,
     ) {
         TopicPageScreen(
             type = state.tabs[it].type,

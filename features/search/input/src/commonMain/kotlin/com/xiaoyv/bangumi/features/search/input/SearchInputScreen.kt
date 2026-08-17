@@ -3,40 +3,26 @@ package com.xiaoyv.bangumi.features.search.input
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_back
@@ -54,11 +40,15 @@ import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
-import com.xiaoyv.bangumi.shared.ui.component.text.BmgTextField
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
-import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import com.xiaoyv.bangumi.shared.ui.theme.contentMargin
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.InputField
+import top.yukonga.miuix.kmp.basic.SearchBar
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 
@@ -98,47 +88,44 @@ private fun SearchInputScreen(
     onUiEvent: (SearchInputEvent.UI) -> Unit,
     onActionEvent: (SearchInputEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .windowInsetsPadding(TopAppBarDefaults.windowInsets)
-                    .height(TopAppBarDefaults.TopAppBarExpandedHeight)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(end = 12.dp, bottom = 8.dp, top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                baseState.content {
-                    SearchInputBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.Center),
-                        state = this,
-                        onActionEvent = onActionEvent,
-                    )
-                }
-
                 IconButton(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 4.dp),
+                    modifier = Modifier.padding(start = 4.dp),
                     onClick = { onUiEvent(SearchInputEvent.UI.OnNavUp) },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        imageVector = BgmMiuixIcons.Back,
                         contentDescription = stringResource(Res.string.global_back),
                     )
                 }
-
-                IconButton(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 4.dp),
-                    onClick = { onActionEvent(SearchInputEvent.Action.OnSearch) },
-                ) {
-                    Icon(
-                        imageVector = BgmIcons.Search,
-                        contentDescription = stringResource(Res.string.global_search),
-                    )
+                Box(modifier = Modifier.weight(1f)) {
+                    val queryText = baseState.payload?.query?.text.orEmpty()
+                    SearchBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        inputField = {
+                            InputField(
+                                query = queryText,
+                                onQueryChange = {
+                                    onActionEvent(SearchInputEvent.Action.OnQueryChange(it.asTextFieldValue()))
+                                },
+                                onSearch = { onActionEvent(SearchInputEvent.Action.OnSearch) },
+                                expanded = true,
+                                onExpandedChange = {},
+                                label = stringResource(Res.string.global_search),
+                            )
+                        },
+                        onExpandedChange = {},
+                        expanded = false,
+                    ) {}
                 }
             }
         }
@@ -188,34 +175,6 @@ private fun SearchInputScreenContent(
 }
 
 @Composable
-private fun SearchInputBar(
-    modifier: Modifier = Modifier,
-    state: SearchInputState,
-    onActionEvent: (SearchInputEvent.Action) -> Unit,
-) {
-    BmgTextField(
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 56.dp, vertical = 14.dp),
-        value = state.query,
-        onValueChange = { onActionEvent(SearchInputEvent.Action.OnQueryChange(it)) },
-        shape = CircleShape,
-        autoFocus = true,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { onActionEvent(SearchInputEvent.Action.OnSearch) }),
-        placeholder = { Text(text = stringResource(Res.string.global_search)) },
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorIndicatorColor = Color.Transparent
-        ),
-        textStyle = MaterialTheme.typography.bodyLarge,
-    )
-}
-
-
-@Composable
 private fun SearchInputHistory(
     state: SearchInputState,
     onActionEvent: (SearchInputEvent.Action) -> Unit,
@@ -239,8 +198,8 @@ private fun SearchInputHistory(
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { clearHistoryDialogState.show() }) {
                 Icon(
-                    imageVector = BgmIcons.Delete,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    imageVector = BgmMiuixIcons.Delete,
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     contentDescription = stringResource(Res.string.global_clear)
                 )
             }
@@ -276,8 +235,8 @@ private fun SearchInputHistory(
                         },
                     ) {
                         Icon(
-                            imageVector = BgmIcons.Close,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            imageVector = BgmMiuixIcons.Close,
+                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             contentDescription = stringResource(Res.string.global_clear),
                         )
                     }

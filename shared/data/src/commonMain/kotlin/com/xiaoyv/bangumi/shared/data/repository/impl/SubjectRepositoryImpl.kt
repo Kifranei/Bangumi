@@ -80,7 +80,7 @@ class SubjectRepositoryImpl(
                 with(subjectParser) {
                     client.bgmWebApi
                         .fetchSubjectComment(subjectId, it)
-                        .fetchSubjectCommentConverted()
+                        .fetchSubjectCommentConverted(subjectId)
                 }
             }
         )

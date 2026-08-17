@@ -29,7 +29,7 @@ fun TopicPageScreen(
     StateLazyColumn(
         modifier = Modifier.fillMaxSize(),
         pagingItems = viewModel.topicFlow.collectAsLazyPagingItems(),
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.id },
         contentType = { CONTENT_TYPE_TOPIC }
     ) { item, _ ->

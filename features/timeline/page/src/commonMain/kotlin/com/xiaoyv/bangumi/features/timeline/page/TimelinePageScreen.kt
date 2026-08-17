@@ -1,8 +1,8 @@
 package com.xiaoyv.bangumi.features.timeline.page
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,12 +13,21 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.xiaoyv.bangumi.core_resource.resources.Res
+import com.xiaoyv.bangumi.core_resource.resources.global_delete
+import com.xiaoyv.bangumi.core_resource.resources.timeline_delete_confirm
 import com.xiaoyv.bangumi.features.timeline.page.business.TimelinePageEvent
+import com.xiaoyv.bangumi.features.timeline.page.business.TimelinePageSideEffect
 import com.xiaoyv.bangumi.features.timeline.page.business.TimelinePageViewModel
 import com.xiaoyv.bangumi.features.timeline.page.business.koinTimelinePageViewModel
 import com.xiaoyv.bangumi.shared.core.types.TopicDetailType
@@ -37,6 +46,9 @@ import com.xiaoyv.bangumi.shared.data.model.response.bgm.timeline.ComposeTimelin
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.timeline.ComposeTimelineMemo
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.timeline.ComposeTimelineSingle
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.timeline.ComposeTimelineSubject
+import com.xiaoyv.bangumi.shared.data.manager.shared.currentUser
+import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertDialog
+import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.image.StateImage
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLazyColumn
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
@@ -44,8 +56,12 @@ import com.xiaoyv.bangumi.shared.ui.component.paging.LazyPagingItems
 import com.xiaoyv.bangumi.shared.ui.component.paging.collectAsLazyPagingItems
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPaddingHalf
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import com.xiaoyv.bangumi.shared.ui.theme.PreviewColumn
 import kotlinx.collections.immutable.persistentListOf
+import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 
 internal const val CONTENT_TYPE_TIMELINE = "CONTENT_TYPE_TIMELINE"
 internal const val CONTENT_TYPE_TIMELINE_SUBJECT = "CONTENT_TYPE_TIMELINE_SUBJECT"
@@ -62,7 +78,9 @@ fun TimelinePageRoute(
     val pagingItems = viewModel.timelines.collectAsLazyPagingItems()
 
     viewModel.collectBaseSideEffect {
-
+        when (it) {
+            TimelinePageSideEffect.OnDeleted -> pagingItems.refresh()
+        }
     }
 
     TimelinePageScreen(
@@ -82,10 +100,24 @@ private fun TimelinePageScreen(
     onUiEvent: (TimelinePageEvent.UI) -> Unit,
     onActionEvent: (TimelinePageEvent.Action) -> Unit,
 ) {
+    val deleteDialog = rememberAlertDialogState()
+    var pendingDelete by remember { mutableStateOf<ComposeTimeline?>(null) }
+
+    BgmAlertDialog(
+        state = deleteDialog,
+        title = stringResource(Res.string.global_delete),
+        text = stringResource(Res.string.timeline_delete_confirm),
+        onConfirm = {
+            pendingDelete?.let {
+                onActionEvent(TimelinePageEvent.Action.OnDelete(it.id))
+            }
+        },
+    )
+
     StateLazyColumn(
         modifier = Modifier.fillMaxSize(),
         pagingItems = pagingItems,
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.id },
         contentType = { CONTENT_TYPE_TIMELINE }
     ) { item, _ ->
@@ -94,6 +126,10 @@ private fun TimelinePageScreen(
             item = item,
             onActionEvent = onActionEvent,
             onUiEvent = onUiEvent,
+            onDeleteClick = {
+                pendingDelete = item
+                deleteDialog.show()
+            },
         )
 
         HorizontalDivider()
@@ -107,9 +143,18 @@ private fun TimelinePageItem(
     item: ComposeTimeline,
     onUiEvent: (TimelinePageEvent.UI) -> Unit,
     onActionEvent: (TimelinePageEvent.Action) -> Unit,
+    onDeleteClick: () -> Unit = {},
 ) {
+    val me = currentUser()
+    val isMine = me.id != 0L && (
+        item.uid == me.id || item.user.id == me.id || item.user.username == me.username
+        )
+
+    Box(modifier = modifier) {
     ListItem(
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = if (isMine) 36.dp else 0.dp),
         leadingContent = {
             StateImage(
                 modifier = Modifier
@@ -247,6 +292,22 @@ private fun TimelinePageItem(
             )
         }
     )
+
+        if (isMine) {
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 4.dp, top = 2.dp),
+                onClick = onDeleteClick,
+            ) {
+                Icon(
+                    imageVector = BgmMiuixIcons.Delete,
+                    contentDescription = stringResource(Res.string.global_delete),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 }
 
 

@@ -7,6 +7,7 @@ import com.xiaoyv.bangumi.core_resource.resources.global_episode
 import com.xiaoyv.bangumi.core_resource.resources.global_group
 import com.xiaoyv.bangumi.core_resource.resources.global_mono
 import com.xiaoyv.bangumi.core_resource.resources.global_subject
+import com.xiaoyv.bangumi.core_resource.resources.rakuen_my_group
 import com.xiaoyv.bangumi.shared.core.mvi.BaseViewModel
 import com.xiaoyv.bangumi.shared.core.types.RakuenTab
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
@@ -25,7 +26,7 @@ class TopicViewModel(savedStateHandle: SavedStateHandle) :
         tabs = persistentListOf(
             ComposeTextTab(RakuenTab.ALL, Res.string.global_all),
             ComposeTextTab(RakuenTab.GROUP, Res.string.global_group),
-//            ComposeTextTab(RakuenType.TYPE_MY_GROUP, Res.string.global_group),
+            ComposeTextTab(RakuenTab.MY_GROUP, Res.string.rakuen_my_group),
             ComposeTextTab(RakuenTab.SUBJECT, Res.string.global_subject),
             ComposeTextTab(RakuenTab.EP, Res.string.global_episode),
             ComposeTextTab(RakuenTab.MONO, Res.string.global_mono),

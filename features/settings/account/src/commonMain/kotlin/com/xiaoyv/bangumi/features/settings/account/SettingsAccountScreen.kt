@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,6 +34,7 @@ import com.xiaoyv.bangumi.features.settings.account.business.SettingsAccountView
 import com.xiaoyv.bangumi.shared.core.mvi.BaseState
 import com.xiaoyv.bangumi.shared.core.types.EditInfoType
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.button.LoadingIconButton
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertInputDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertInputDialogState
@@ -88,9 +89,9 @@ private fun SettingsAccountScreen(
     onUiEvent: (SettingsAccountEvent.UI) -> Unit,
     onActionEvent: (SettingsAccountEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -180,7 +181,7 @@ private fun SettingsAccountScreenContent(
             }
         }
 
-        SettingContainer(label = { Text(text = stringResource(Res.string.global_network_service)) }) {
+        SettingContainer(title = stringResource(Res.string.global_network_service)) {
             state.networkItems.entries.forEach { data ->
                 SettingItem(
                     title = stringResource(EditInfoType.string(data.key)),

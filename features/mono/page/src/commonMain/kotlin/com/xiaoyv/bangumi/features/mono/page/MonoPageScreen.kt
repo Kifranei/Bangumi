@@ -115,7 +115,7 @@ private fun MonoPageLineLayout(
                 }
             }
         },
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.id },
         contentType = { CONTENT_TYPE_MONO_ITEM }
     ) { item, index ->
@@ -160,7 +160,7 @@ private fun MonoPageGridLayout(
                 )
             }
         },
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.id },
         contentType = { CONTENT_TYPE_MONO_ITEM }
     ) { item, index ->

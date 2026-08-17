@@ -82,4 +82,8 @@ actual object System {
     actual suspend fun cleanCache(): Result<Boolean> {
         return Result.success(true)
     }
+
+    actual suspend fun saveImageFromUrl(url: String): Result<Unit> {
+        return Result.failure(UnsupportedOperationException("saveImageFromUrl"))
+    }
 }

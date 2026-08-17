@@ -1,6 +1,9 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.xiaoyv.bangumi.features.gallery
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -11,10 +14,11 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,7 +41,13 @@ import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.space.BrushVerticalTransparentToHalfBlack
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPaddingHalf
+import com.xiaoyv.bangumi.shared.System
+import com.xiaoyv.bangumi.shared.ui.component.popup.LocalPopupTipState
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_failed
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_success
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
@@ -72,7 +82,7 @@ private fun GalleryScreen(
     onUiEvent: (GalleryEvent.UI) -> Unit,
     onActionEvent: (GalleryEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -108,6 +118,8 @@ private fun GalleryScreenContent(
         columns = StaggeredGridCells.Adaptive(350.dp)
     ) {
         itemsIndexed(state.images) { index, item ->
+            val popupTipState = LocalPopupTipState.current
+            val scope = rememberCoroutineScope()
             GalleryPictureItem(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,7 +127,15 @@ private fun GalleryScreenContent(
                 item = item,
                 onClick = {
                     onUiEvent(GalleryEvent.UI.OnNavScreen(Screen.PreviewMain(index, state.images.map { it.image })))
-                }
+                },
+                onLongClick = {
+                    val url = item.image
+                    if (url.isNotBlank()) scope.launch {
+                        System.saveImageFromUrl(url)
+                            .onSuccess { popupTipState.showToast(getString(Res.string.global_save_image_success)) }
+                            .onFailure { popupTipState.showToast(getString(Res.string.global_save_image_failed)) }
+                    }
+                },
             )
         }
     }
@@ -127,8 +147,13 @@ private fun GalleryPictureItem(
     modifier: Modifier,
     item: ComposeGallery,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.clickable(onClick = onClick).then(modifier)) {
+    Box(
+        modifier = Modifier
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .then(modifier)
+    ) {
         StateImage(
             modifier = Modifier
                 .matchParentSize()

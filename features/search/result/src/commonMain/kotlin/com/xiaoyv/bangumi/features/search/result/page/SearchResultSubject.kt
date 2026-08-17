@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,6 +48,7 @@ import com.xiaoyv.bangumi.features.subject.page.SubjectPageRoute
 import com.xiaoyv.bangumi.shared.core.utils.asTextFieldValue
 import com.xiaoyv.bangumi.shared.core.utils.resetSize
 import com.xiaoyv.bangumi.shared.ui.component.chip.DropMenuChip
+import com.xiaoyv.bangumi.shared.ui.component.chip.FilterActionChip
 import com.xiaoyv.bangumi.shared.ui.component.dialog.sheet.BottomSheetDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.sheet.BottomSheetDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.sheet.rememberSheetDialogState
@@ -91,9 +91,9 @@ fun SearchResultSubject(
                 onActionEvent = onActionEvent
             )
 
-            AssistChip(
+            FilterActionChip(
+                text = "高级过滤",
                 onClick = { advanceDialogState.show() },
-                label = { Text("高级过滤") }
             )
 
             DropMenuChip(

@@ -5,17 +5,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.xiaoyv.bangumi.shared.System
+import com.xiaoyv.bangumi.shared.ui.component.popup.LocalPopupTipState
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_image
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_failed
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_success
 import com.xiaoyv.bangumi.features.preivew.main.business.PreviewMainEvent
 import com.xiaoyv.bangumi.features.preivew.main.business.PreviewMainState
 import com.xiaoyv.bangumi.features.preivew.main.business.PreviewMainViewModel
@@ -58,7 +65,7 @@ private fun PreviewMainScreen(
     onUiEvent: (PreviewMainEvent.UI) -> Unit,
     onActionEvent: (PreviewMainEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -102,6 +109,8 @@ private fun PreviewMainScreenContent(
             }
     }
 
+    val popupTipState = LocalPopupTipState.current
+    val scope = rememberCoroutineScope()
     if (state.items.isNotEmpty()) HorizontalPager(
         modifier = Modifier.fillMaxSize(),
         state = pagerState
@@ -110,7 +119,15 @@ private fun PreviewMainScreenContent(
             modifier = Modifier.fillMaxSize(),
             model = state.items[it],
             contentDescription = stringResource(Res.string.global_image),
-            onTap = { onUiEvent(PreviewMainEvent.UI.OnNavUp) }
+            onTap = { onUiEvent(PreviewMainEvent.UI.OnNavUp) },
+            onLongPress = {
+                val url = state.items.getOrNull(pagerState.currentPage).orEmpty()
+                if (url.isNotBlank()) scope.launch {
+                    System.saveImageFromUrl(url)
+                        .onSuccess { popupTipState.showToast(getString(Res.string.global_save_image_success)) }
+                        .onFailure { popupTipState.showToast(getString(Res.string.global_save_image_failed)) }
+                }
+            }
         )
     }
 }

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.xiaoyv.bangumi.core_resource.resources.Res
@@ -35,6 +36,7 @@ import com.xiaoyv.bangumi.shared.core.mvi.BaseState
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
 import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.AlertOptionDialog
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
@@ -49,6 +51,8 @@ import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
 
 @Composable
 fun SettingsBarRoute(
@@ -80,9 +84,9 @@ private fun SettingsBarScreen(
     onUiEvent: (SettingsBarEvent.UI) -> Unit,
     onActionEvent: (SettingsBarEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -114,24 +118,33 @@ private fun SettingsBarScreenContent(
     onActionEvent: (SettingsBarEvent.Action) -> Unit,
 ) {
     val settings = currentSettings()
+    val transparentOptionColors = ButtonDefaults.textButtonColors(
+        color = Color.Transparent,
+        disabledColor = Color.Transparent,
+    )
 
     Column(modifier = Modifier.padding(vertical = 24.dp)) {
-        SettingContainer(label = { Text(text = stringResource(Res.string.settings_appearance)) }) {
+        SettingContainer(title = stringResource(Res.string.settings_appearance)) {
             SettingOptionItem(
                 title = stringResource(Res.string.settings_bar_appearance),
                 value = stringResource(SettingBottomBarAppearance.string(settings.homeTab.appearance)),
                 items = TabTokens.settingBottomBarAppearanceItems,
+                dropdownColors = DropdownDefaults.dropdownColors(
+                    containerColor = Color.Transparent,
+                    selectedContainerColor = Color.Transparent,
+                ),
                 onClick = {
                     onActionEvent(SettingsBarEvent.Action.OnUpdate(settings.homeTab.copy(appearance = it)))
                 }
             )
         }
-        SettingContainer(label = { Text(text = stringResource(Res.string.settings_bar_boot)) }) {
+        SettingContainer(title = stringResource(Res.string.settings_bar_boot)) {
             val chooseDefaultTabDialogState = rememberAlertDialogState()
             AlertOptionDialog(
                 title = stringResource(Res.string.settings_bar_boot_default),
                 state = chooseDefaultTabDialogState,
                 items = TabTokens.mainTabIndex,
+                itemColors = transparentOptionColors,
                 onClick = { tab, index ->
                     onActionEvent(SettingsBarEvent.Action.OnUpdate(settings.homeTab.copy(defaultSelected = tab.type)))
                 }
@@ -146,7 +159,7 @@ private fun SettingsBarScreenContent(
                 onClick = { chooseDefaultTabDialogState.show() }
             )
         }
-        SettingContainer(label = { Text(text = stringResource(Res.string.settings_bar_tab)) }) {
+        SettingContainer(title = stringResource(Res.string.settings_bar_tab)) {
             val chooseTabFeatureDialogState = rememberAlertDialogState()
             var changeTabIndex by remember { mutableStateOf(0) }
 
@@ -165,6 +178,7 @@ private fun SettingsBarScreenContent(
                 title = stringResource(Res.string.settings_bar_tab),
                 state = chooseTabFeatureDialogState,
                 items = TabTokens.mainTabFeatures,
+                itemColors = transparentOptionColors,
                 onClick = { tab, index ->
                     val updated = when (changeTabIndex) {
                         0 -> settings.homeTab.copy(tab1 = tab.type)

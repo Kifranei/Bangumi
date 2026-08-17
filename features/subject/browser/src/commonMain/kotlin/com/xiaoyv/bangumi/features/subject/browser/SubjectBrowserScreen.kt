@@ -18,7 +18,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +40,7 @@ import com.xiaoyv.bangumi.shared.core.types.SubjectSortBrowserType
 import com.xiaoyv.bangumi.shared.data.manager.shared.LocalHideNavIcon
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmTopAppBar
 import com.xiaoyv.bangumi.shared.ui.component.chip.DropMenuChip
+import com.xiaoyv.bangumi.shared.ui.component.chip.FilterActionChip
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.date.MonthPicker
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
@@ -50,6 +51,7 @@ import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.subjectBrowserSortTabs
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIconsMirrored
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import kotlinx.collections.immutable.toPersistentList
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -85,7 +87,7 @@ private fun SubjectBrowserScreen(
     onUiEvent: (SubjectBrowserEvent.UI) -> Unit,
     onActionEvent: (SubjectBrowserEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -108,14 +110,14 @@ private fun SubjectBrowserScreen(
                     IconButton(onClick = { onActionEvent(SubjectBrowserEvent.Action.OnChangeLayoutMode) }) {
                         baseState.content {
                             Icon(
-                                imageVector = if (param.ui.gridLayout) BgmIcons.LineStyle else BgmIcons.GridView,
+                                imageVector = if (param.ui.gridLayout) BgmMiuixIcons.ListView else BgmMiuixIcons.GridView,
                                 contentDescription = null
                             )
                         }
                     }
                     IconButton(onClick = { onUiEvent(SubjectBrowserEvent.UI.OnNavScreen(Screen.SearchInput())) }) {
                         Icon(
-                            imageVector = BgmIcons.Search,
+                            imageVector = BgmMiuixIcons.Search,
                             contentDescription = stringResource(Res.string.global_search)
                         )
                     }
@@ -210,26 +212,20 @@ private fun SubjectBrowserScreenContent(
                     }
                 )
 
-                AssistChip(
+                FilterActionChip(
+                    text = buildString {
+                        append(stringResource(Res.string.global_date))
+                        append(" ")
+                        val year = param.browser.year
+                        val month = param.browser.month
+                        if (year == 0 && month == 0) {
+                            append(stringResource(Res.string.global_all))
+                        } else {
+                            if (year > 0) append("${year}年")
+                            if (month > 0) append("${month}月")
+                        }
+                    },
                     onClick = { yearPickerDialogState.show() },
-                    colors = AssistChipDefaults.assistChipColors(labelColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                    label = {
-                        Text(
-                            text = buildString {
-                                append(stringResource(Res.string.global_date))
-                                append(" ")
-
-                                val year = param.browser.year
-                                val month = param.browser.month
-                                if (year == 0 && month == 0) {
-                                    append(stringResource(Res.string.global_all))
-                                } else {
-                                    if (year > 0) append("${year}年")
-                                    if (month > 0) append("${month}月")
-                                }
-                            }
-                        )
-                    }
                 )
             }
         }

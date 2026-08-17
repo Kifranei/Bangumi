@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +37,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.mainHomeTabs
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
-import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.orbitmvi.orbit.compose.collectAsState
@@ -73,14 +72,14 @@ private fun HomeScreen(
     onUiEvent: (HomeEvent.UI) -> Unit,
     onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
-                titleContent = {
+                navigationIcon = {
                     Icon(
                         modifier = Modifier
-                            .height(32.dp)
+                            .height(28.dp)
                             .aspectRatio(27 / 7f),
                         painter = painterResource(Res.drawable.ic_logo_riff),
                         tint = MaterialTheme.colorScheme.primary,
@@ -98,7 +97,7 @@ private fun HomeScreen(
                     }
                     IconButton(onClick = { onUiEvent(HomeEvent.UI.OnNavScreen(Screen.SearchInput())) }) {
                         Icon(
-                            imageVector = BgmIcons.Search,
+                            imageVector = BgmMiuixIcons.Search,
                             contentDescription = stringResource(Res.string.global_search)
                         )
                     }

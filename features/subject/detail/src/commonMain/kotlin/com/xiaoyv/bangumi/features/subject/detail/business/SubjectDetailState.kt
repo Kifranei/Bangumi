@@ -14,6 +14,7 @@ import com.xiaoyv.bangumi.core_resource.resources.subject_tab_person
 import com.xiaoyv.bangumi.core_resource.resources.subject_tab_preview
 import com.xiaoyv.bangumi.core_resource.resources.subject_tab_related
 import com.xiaoyv.bangumi.core_resource.resources.subject_tab_topic
+import com.xiaoyv.bangumi.core_resource.resources.global_spit_out
 import com.xiaoyv.bangumi.core_resource.resources.subject_tab_tracks
 import com.xiaoyv.bangumi.shared.core.types.LoadingState
 import com.xiaoyv.bangumi.shared.core.types.SubjectDetailTab
@@ -26,11 +27,15 @@ import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeMonoDisplay
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeParade
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubject
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubjectDisplay
+import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeMap
+import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeComment
+import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeReaction
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeTag
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.chineseNames
 import com.xiaoyv.bangumi.shared.data.model.response.db.ComposeDoubanPhoto
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -58,7 +63,15 @@ data class SubjectDetailState(
     val loading: LoadingState = LoadingState.NotLoading,
     @Transient
     val previewLoading: LoadingState = LoadingState.Loading,
+    @Transient
+    val commentReactions: SerializeMap<String, SerializeList<ComposeReaction>> = persistentMapOf(),
 ) {
+    fun reactionsOf(item: ComposeComment): SerializeList<ComposeReaction> {
+        val likeId = item.emojiParam.likeCommentId
+        return commentReactions[item.id]
+            ?: commentReactions[likeId]
+            ?: item.reactions
+    }
 
     fun magnetQuery(episode: ComposeEpisode = ComposeEpisode.Empty): String {
         val ep = if (episode == ComposeEpisode.Empty) "" else listOf(episode.sortOrder, episode.episodeNumber)
@@ -98,6 +111,7 @@ data class SubjectDetailState(
         }
         items.add(ComposeTextTab(SubjectDetailTab.CHARACTER, Res.string.subject_tab_character))
         items.add(ComposeTextTab(SubjectDetailTab.PERSON, Res.string.subject_tab_person))
+        items.add(ComposeTextTab(SubjectDetailTab.COMMENT, Res.string.global_spit_out))
         items.add(ComposeTextTab(SubjectDetailTab.RELATED, Res.string.subject_tab_related))
         items.add(ComposeTextTab(SubjectDetailTab.INDEX, Res.string.subject_tab_index))
         items.add(ComposeTextTab(SubjectDetailTab.BLOG, Res.string.subject_tab_blog))

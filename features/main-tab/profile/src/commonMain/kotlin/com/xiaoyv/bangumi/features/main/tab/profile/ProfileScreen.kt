@@ -123,7 +123,7 @@ private fun ProfileScreen(
                 it
             )
             BgmTopAppBar(
-                title = currentUser().nickname,
+                title = "",
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = it),
                     titleContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = it),

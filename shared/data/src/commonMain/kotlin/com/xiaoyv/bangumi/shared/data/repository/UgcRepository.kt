@@ -63,4 +63,6 @@ interface UgcRepository {
     suspend fun submitNewReply(action: String, params: Map<String, Any>): Result<ComposeNewReply>
 
     suspend fun summitDollarsChat(message: String): Result<ComposeStatus>
+
+    suspend fun deleteTimeline(timelineId: Long): Result<Unit>
 }

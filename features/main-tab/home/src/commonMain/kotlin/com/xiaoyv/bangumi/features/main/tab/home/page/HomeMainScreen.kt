@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,8 +27,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +50,8 @@ import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.calendar_today_title
 import com.xiaoyv.bangumi.core_resource.resources.calendar_tomorrow_title
 import com.xiaoyv.bangumi.core_resource.resources.global_rank
+import com.xiaoyv.bangumi.core_resource.resources.home_shortcuts_collapse
+import com.xiaoyv.bangumi.core_resource.resources.home_shortcuts_expand
 import com.xiaoyv.bangumi.core_resource.resources.subject_home_calendar
 import com.xiaoyv.bangumi.features.main.tab.home.business.HomeEvent
 import com.xiaoyv.bangumi.features.main.tab.home.business.HomeState
@@ -53,6 +60,7 @@ import com.xiaoyv.bangumi.shared.component.DetectType
 import com.xiaoyv.bangumi.shared.core.types.FeatureType
 import com.xiaoyv.bangumi.shared.core.types.SubjectSortBrowserType
 import com.xiaoyv.bangumi.shared.core.types.SubjectType
+import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.data.model.request.list.subject.SubjectBrowserBody
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeHomepageCard
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubjectDisplay
@@ -63,6 +71,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutGridWidth
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPadding
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutPaddingHalf
+import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeDrawableTab
 import com.xiaoyv.bangumi.shared.ui.component.text.SectionTitle
 import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.mainHomeActions
 import com.xiaoyv.bangumi.shared.ui.kts.isExtraSmallScreen
@@ -86,6 +95,10 @@ fun HomeMainScreen(
     onUiEvent: (HomeEvent.UI) -> Unit,
     onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
+    val hiddenHomeShortcuts = currentSettings().ui.hiddenHomeShortcuts
+    val visibleHomeActions = remember(hiddenHomeShortcuts) {
+        mainHomeActions.filter { it.type.toString() !in hiddenHomeShortcuts }
+    }
     StateLayout(
         modifier = Modifier.fillMaxSize(),
         baseState = baseState,
@@ -102,8 +115,13 @@ fun HomeMainScreen(
             item(key = CONTENT_TYPE_BANNER, contentType = CONTENT_TYPE_BANNER) {
                 HomeMainBanner(state, onUiEvent, onActionEvent)
             }
-            item(key = CONTENT_TYPE_ACTION, contentType = CONTENT_TYPE_ACTION) {
-                HomeMainAction(state, onUiEvent, onActionEvent)
+            if (visibleHomeActions.isNotEmpty()) {
+                item(key = CONTENT_TYPE_ACTION, contentType = CONTENT_TYPE_ACTION) {
+                    HomeMainAction(
+                        actions = visibleHomeActions,
+                        onUiEvent = onUiEvent,
+                    )
+                }
             }
             item(key = CONTENT_TYPE_CALENDAR, contentType = CONTENT_TYPE_CALENDAR) {
                 HomeMainCalendar(state, onUiEvent, onActionEvent)
@@ -148,16 +166,25 @@ fun HomeMainBanner(
     }
 }
 
+private const val HOME_SHORTCUT_COLLAPSED_COUNT = 5
+
 @Composable
 fun HomeMainAction(
-    state: HomeState,
+    actions: List<ComposeDrawableTab>,
     onUiEvent: (HomeEvent.UI) -> Unit,
-    onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
     val space = if (isExtraSmallScreen) 16.dp else 24.dp
     val columns = if (isExtraSmallScreen) SimpleGridCells.Fixed(5) else SimpleGridCells.Adaptive(50.dp)
     val scope = rememberCoroutineScope()
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val canCollapse = actions.size > HOME_SHORTCUT_COLLAPSED_COUNT
+    val visibleActions = if (!canCollapse || expanded) {
+        actions
+    } else {
+        actions.take(HOME_SHORTCUT_COLLAPSED_COUNT)
+    }
 
+    Column(modifier = Modifier.fillMaxWidth()) {
     VerticalGrid(
         modifier = Modifier
             .fillMaxWidth()
@@ -166,7 +193,7 @@ fun HomeMainAction(
         horizontalArrangement = Arrangement.spacedBy(space),
         verticalArrangement = Arrangement.spacedBy(space),
     ) {
-        mainHomeActions.forEach {
+        visibleActions.forEach {
             val label = stringResource(it.label)
 
             Column(
@@ -235,6 +262,28 @@ fun HomeMainAction(
                     fontWeight = FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+
+        if (canCollapse) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = LayoutPadding, bottom = LayoutPaddingHalf),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Text(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable { expanded = !expanded }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    text = stringResource(
+                        if (expanded) Res.string.home_shortcuts_collapse else Res.string.home_shortcuts_expand
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }

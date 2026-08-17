@@ -555,6 +555,13 @@ interface BgmWebApi {
      *
      * @param notification all 则为全部已读，具体 id 就是单条已读
      */
+    @GET("erase/tml/{tmlId}")
+    suspend fun deleteTimeline(
+        @Path("tmlId") tmlId: String,
+        @Query("gh") hash: String,
+        @Query("ajax") ajax: Int = 1,
+    ): HttpResponse
+
     @GET("erase/notify/{notification}")
     suspend fun submitMarkNotificationRead(
         @Path("notification") notification: String,

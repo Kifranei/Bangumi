@@ -1,7 +1,10 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.xiaoyv.bangumi.features.subject.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -38,8 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaoyv.bangumi.core_resource.resources.Res
+import com.xiaoyv.bangumi.core_resource.resources.global_copy_success
 import com.xiaoyv.bangumi.core_resource.resources.global_image
 import com.xiaoyv.bangumi.core_resource.resources.global_rank_no
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_failed
+import com.xiaoyv.bangumi.core_resource.resources.global_save_image_success
 import com.xiaoyv.bangumi.core_resource.resources.ic_add_index
 import com.xiaoyv.bangumi.core_resource.resources.subject_action_more
 import com.xiaoyv.bangumi.core_resource.resources.subject_locked
@@ -50,6 +56,7 @@ import com.xiaoyv.bangumi.features.subject.detail.business.SubjectDetailViewMode
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailBlogScreen
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailCharacterScreen
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailChartScreen
+import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailCommentScreen
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailEpisodeScreen
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailIndexScreen
 import com.xiaoyv.bangumi.features.subject.detail.page.SubjectDetailMainScreen
@@ -66,7 +73,9 @@ import com.xiaoyv.bangumi.shared.data.manager.shared.LocalSharedState
 import com.xiaoyv.bangumi.shared.data.manager.shared.currentMikanId
 import com.xiaoyv.bangumi.shared.data.model.request.IndexTarget
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeComment
+import com.xiaoyv.bangumi.shared.System
 import com.xiaoyv.bangumi.shared.ui.component.action.LocalActionHandler
+import com.xiaoyv.bangumi.shared.ui.component.popup.LocalPopupTipState
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmTopAppBar
 import com.xiaoyv.bangumi.shared.ui.component.chip.DropMenuActionButton
 import com.xiaoyv.bangumi.shared.ui.component.dialog.sheet.rememberSheetDialogState
@@ -91,6 +100,7 @@ import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
@@ -260,6 +270,9 @@ private fun SubjectDetailScreenHeader(
     onUiEvent: (SubjectDetailEvent.UI) -> Unit,
     onActionEvent: (SubjectDetailEvent.Action) -> Unit,
 ) {
+    val actionHandler = LocalActionHandler.current
+    val popupTipState = LocalPopupTipState.current
+    val scope = rememberCoroutineScope()
     Box(modifier = modifier) {
         BlurImage(
             modifier = Modifier.matchParentSize(),
@@ -290,9 +303,29 @@ private fun SubjectDetailScreenHeader(
                 StateImage(
                     modifier = Modifier
                         .matchParentSize()
-                        .clickable {
-                            onUiEvent(SubjectDetailEvent.UI.OnNavScreen(Screen.PreviewMain(state.subject.images.displayMediumImage)))
-                        },
+                        .combinedClickable(
+                            onClick = {
+                                onUiEvent(SubjectDetailEvent.UI.OnNavScreen(Screen.PreviewMain(state.subject.images.displayMediumImage)))
+                            },
+                            onLongClick = {
+                                val url = state.subject.images.displayLargeImage.ifBlank {
+                                    state.subject.images.displayMediumImage
+                                }
+                                if (url.isNotBlank()) scope.launch {
+                                    System.saveImageFromUrl(url)
+                                        .onSuccess {
+                                            popupTipState.showToast(
+                                                getString(Res.string.global_save_image_success)
+                                            )
+                                        }
+                                        .onFailure {
+                                            popupTipState.showToast(
+                                                getString(Res.string.global_save_image_failed)
+                                            )
+                                        }
+                                }
+                            },
+                        ),
                     shape = MaterialTheme.shapes.small,
                     contentScale = ContentScale.Crop,
                     model = state.subject.images.displayMediumImage,
@@ -349,6 +382,15 @@ private fun SubjectDetailScreenHeader(
                 verticalArrangement = Arrangement.spacedBy(LayoutPaddingHalf)
             ) {
                 Text(
+                    modifier = Modifier.combinedClickable(
+                        onClick = {},
+                        onLongClick = {
+                            actionHandler.copyContent(state.subject.displayName)
+                            scope.launch {
+                                popupTipState.showToast(getString(Res.string.global_copy_success))
+                            }
+                        },
+                    ),
                     text = state.subject.displayName,
                     style = MaterialTheme.typography.titleLarge,
                     color = imageColorState.contentColor,
@@ -358,7 +400,17 @@ private fun SubjectDetailScreenHeader(
                 if (state.subject.name.isNotBlank()
                     && state.subject.displayName != state.subject.name
                 ) Text(
-                    modifier = Modifier.basicMarquee(),
+                    modifier = Modifier
+                        .basicMarquee()
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = {
+                                actionHandler.copyContent(state.subject.name)
+                                scope.launch {
+                                    popupTipState.showToast(getString(Res.string.global_copy_success))
+                                }
+                            },
+                        ),
                     text = state.subject.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = imageColorState.contentColor,
@@ -445,6 +497,13 @@ fun SubjectDetailScreenContent(
 
             SubjectDetailTab.PERSON -> SubjectDetailPersonScreen(
                 state = state,
+                onUiEvent = onUiEvent,
+                onActionEvent = onActionEvent
+            )
+
+            SubjectDetailTab.COMMENT -> SubjectDetailCommentScreen(
+                state = state,
+                commentPagingItems = commentPagingItems,
                 onUiEvent = onUiEvent,
                 onActionEvent = onActionEvent
             )

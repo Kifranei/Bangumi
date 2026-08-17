@@ -33,6 +33,7 @@ import com.xiaoyv.bangumi.shared.data.model.request.list.tag.ListTagParam
 import com.xiaoyv.bangumi.shared.data.model.request.list.tag.TagSearchBody
 import com.xiaoyv.bangumi.shared.data.model.request.list.topic.ListTopicParam
 import com.xiaoyv.bangumi.shared.data.model.request.list.topic.TopicSearchBody
+import com.xiaoyv.bangumi.shared.data.manager.app.UserManager
 import com.xiaoyv.bangumi.shared.data.model.ui.PageUI
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
@@ -47,7 +48,14 @@ import kotlinx.collections.immutable.persistentListOf
 class SearchResultViewModel(
     savedStateHandle: SavedStateHandle,
     private val args: Screen.SearchResult,
+    private val userManager: UserManager,
 ) : BaseViewModel<SearchResultState, SearchResultSideEffect, SearchResultEvent.Action>(savedStateHandle) {
+    private val rememberedSubjectType: Int
+        get() {
+            val stored = userManager.settings.ui.searchSubjectType
+            return if (stored == SubjectType.UNKNOWN) SubjectType.ANIME else stored
+        }
+
     override fun initSate(onCreate: Boolean) = SearchResultState(
         query = args.query,
         tabs = persistentListOf(
@@ -69,7 +77,7 @@ class SearchResultViewModel(
             search = SubjectSearchBody(
                 keyword = args.query,
                 filter = SubjectSearchBody.SubjectSearchFilter(
-                    type = persistentListOf(SubjectType.ANIME),
+                    type = persistentListOf(rememberedSubjectType),
                     nsfw = true
                 )
             )
@@ -108,7 +116,7 @@ class SearchResultViewModel(
             type = ListTagType.SEARCH,
             search = TagSearchBody(
                 keyword = args.query,
-                subjectType = SubjectType.ANIME
+                subjectType = rememberedSubjectType
             )
         )
     )
@@ -145,6 +153,7 @@ class SearchResultViewModel(
     }
 
     private fun onUpdateSearchTagParam(body: TagSearchBody) = action {
+        rememberSubjectType(body.subjectType)
         reduceContent { state.copy(tagParam = state.tagParam.copy(search = body)) }
     }
 
@@ -158,6 +167,15 @@ class SearchResultViewModel(
     }
 
     private fun onUpdateSearchSubjectParam(body: SubjectSearchBody) = action {
+        rememberSubjectType(body.filter.type?.firstOrNull())
         reduceContent { state.copy(subjectParam = state.subjectParam.copy(search = body)) }
+    }
+
+    private fun rememberSubjectType(type: Int?) {
+        val subjectType = type ?: return
+        if (subjectType == userManager.settings.ui.searchSubjectType) return
+        userManager.updateSettings { current ->
+            current.copy(ui = current.ui.copy(searchSubjectType = subjectType))
+        }
     }
 }

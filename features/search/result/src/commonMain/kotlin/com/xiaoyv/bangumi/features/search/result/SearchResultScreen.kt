@@ -3,15 +3,10 @@ package com.xiaoyv.bangumi.features.search.result
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_search
 import com.xiaoyv.bangumi.features.search.result.business.SearchResultEvent
@@ -25,14 +20,15 @@ import com.xiaoyv.bangumi.features.search.result.page.SearchResultTag
 import com.xiaoyv.bangumi.features.search.result.page.SearchResultTopic
 import com.xiaoyv.bangumi.shared.core.mvi.BaseState
 import com.xiaoyv.bangumi.shared.core.types.SearchType
-import com.xiaoyv.bangumi.shared.core.utils.clickWithoutRipped
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmTopAppBar
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
-import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 
@@ -66,7 +62,7 @@ private fun SearchResultScreen(
     onUiEvent: (SearchResultEvent.UI) -> Unit,
     onActionEvent: (SearchResultEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             baseState.content {
@@ -118,30 +114,18 @@ private fun SearchResultTopBar(
 ) {
     BgmTopAppBar(
         modifier = Modifier.fillMaxWidth(),
-        titleContent = {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickWithoutRipped {
-                        onUiEvent(SearchResultEvent.UI.OnNavScreen(Screen.SearchInput(state.query)))
-                    },
-                text = state.query,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
+        title = state.query,
         actions = {
             IconButton(
                 onClick = {
                     onUiEvent(SearchResultEvent.UI.OnNavScreen(Screen.SearchInput(state.query)))
                 },
-                content = {
-                    Icon(
-                        imageVector = BgmIcons.Search,
-                        contentDescription = stringResource(Res.string.global_search)
-                    )
-                }
-            )
+            ) {
+                Icon(
+                    imageVector = BgmMiuixIcons.Search,
+                    contentDescription = stringResource(Res.string.global_search),
+                )
+            }
         },
         onNavigationClick = { onUiEvent(SearchResultEvent.UI.OnNavUp) }
     )

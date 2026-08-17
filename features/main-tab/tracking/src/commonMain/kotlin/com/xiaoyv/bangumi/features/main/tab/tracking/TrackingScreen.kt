@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -25,6 +25,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.BgmMiuixIcons
 import com.xiaoyv.bangumi.shared.ui.theme.PreviewColumn
 import org.jetbrains.compose.resources.stringResource
 import org.orbitmvi.orbit.compose.collectAsState
@@ -56,7 +57,7 @@ private fun TrackingScreen(
     onUiEvent: (TrackingEvent.UI) -> Unit,
     onActionEvent: (TrackingEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -64,7 +65,7 @@ private fun TrackingScreen(
                 actions = {
                     IconButton(onClick = { onUiEvent(TrackingEvent.UI.OnNavScreen(Screen.SearchInput())) }) {
                         Icon(
-                            imageVector = BgmIcons.Search,
+                            imageVector = BgmMiuixIcons.Search,
                             contentDescription = stringResource(Res.string.global_search)
                         )
                     }

@@ -9,6 +9,7 @@ import com.xiaoyv.bangumi.shared.core.utils.Node
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeDateLong
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.user.ComposeUser
+import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeReaction
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -44,6 +45,7 @@ data class ComposeComment(
     @SerialName("collectType") val collectType: Int = CollectionType.UNKNOWN,
 
     @SerialName("parent") val parent: ComposeComment? = null,
+    @SerialName("reactions") val reactions: SerializeList<ComposeReaction> = persistentListOf(),
 
     /**
      * 子评论

@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -29,6 +31,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopHost
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopState
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.LocalDoubleTapToScrollTopState
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -50,6 +55,7 @@ fun BgmCollapsingScaffold(
     content: @Composable BoxScope.(scrollProgress: Float) -> Unit,
 ) {
     val density = LocalDensity.current
+    val doubleTapToScrollTopState = remember { DoubleTapToScrollTopState() }
     var minHeightPx by rememberSaveable { mutableIntStateOf(0) }
     var maxHeightPx by rememberSaveable { mutableIntStateOf(0) }
 
@@ -135,11 +141,18 @@ fun BgmCollapsingScaffold(
         }
     }
 
-    SubcomposeLayout(modifier = modifier.windowInsetsPadding(windowInsets)) { constraints ->
+    CompositionLocalProvider(
+        LocalDoubleTapToScrollTopState provides doubleTapToScrollTopState,
+    ) {
+        SubcomposeLayout(modifier = modifier.windowInsetsPadding(windowInsets)) { constraints ->
 
         // --- 测量 TopBar ---
         val topBarPlaceable = subcompose(BgmCollapsingSlot.TOP_BAR) {
-            if (topBar != null) Box(Modifier.fillMaxWidth()) { topBar(scrollProgress) }
+            if (topBar != null) {
+                DoubleTapToScrollTopHost(state = doubleTapToScrollTopState) {
+                    topBar(scrollProgress)
+                }
+            }
         }.firstOrNull()?.measure(constraints.copy(minHeight = 0))
 
         minHeightPx = topBarPlaceable?.height ?: 0
@@ -200,6 +213,7 @@ fun BgmCollapsingScaffold(
 
             // 4. Overlay
             overlayPlaceable?.placeRelative(x = 0, y = 0)
+        }
         }
     }
 }

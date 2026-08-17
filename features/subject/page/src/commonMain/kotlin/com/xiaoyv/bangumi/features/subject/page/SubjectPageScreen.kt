@@ -123,7 +123,7 @@ private fun SubjectPageScreenContent(
                     )
                 }
             },
-            showScrollUpBtn = true,
+            enableDoubleTapToScrollTop = true,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(12.dp)
@@ -147,7 +147,7 @@ private fun SubjectPageScreenContent(
                     else item(key = ITEM_HEADER, contentType = ITEM_HEADER) { header() }
                 }
             },
-            showScrollUpBtn = true,
+            enableDoubleTapToScrollTop = true,
             modifier = Modifier.fillMaxSize()
         ) { item, _ ->
             SubjectLineItem(

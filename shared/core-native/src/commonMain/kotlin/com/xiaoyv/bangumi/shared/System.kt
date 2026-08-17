@@ -31,4 +31,6 @@ expect object System {
     fun shareText(text: String)
 
     fun createHttpClient(block: HttpClientConfig<*>.() -> Unit): HttpClient
+
+    suspend fun saveImageFromUrl(url: String): Result<Unit>
 }
