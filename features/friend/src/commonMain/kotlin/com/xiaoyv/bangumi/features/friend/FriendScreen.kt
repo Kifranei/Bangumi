@@ -120,7 +120,7 @@ private fun FriendScreenPage(
     StateLazyColumn(
         modifier = Modifier.fillMaxSize(),
         pagingItems = pagingItems,
-        showScrollUpBtn = true
+        enableDoubleTapToScrollTop = true
     ) { item, index ->
         FriendScreenItem(
             item = item,

@@ -118,7 +118,7 @@ private fun IllustPageScreenContent(
                     )
                 }
             },
-            showScrollUpBtn = true,
+            enableDoubleTapToScrollTop = true,
             horizontalArrangement = Arrangement.spacedBy(ContentMarginHalf),
             verticalArrangement = Arrangement.spacedBy(ContentMarginHalf),
             contentPadding = PaddingValues(ContentMarginHalf),
@@ -147,7 +147,7 @@ private fun IllustPageScreenContent(
                     else item(key = ITEM_HEADER, contentType = ITEM_HEADER) { header() }
                 }
             },
-            showScrollUpBtn = true,
+            enableDoubleTapToScrollTop = true,
             modifier = Modifier.fillMaxSize(),
             key = { item, _ -> item.illust_id },
             contentType = { CONTENT_TYPE_PIXIV_RANKING }

@@ -40,7 +40,12 @@ fun ScreenNavHost(
             SettingNavigationAnimation.FADE -> FadeNavTransitions.popTransitionSpec
             SettingNavigationAnimation.SLIDE -> DefaultNavTransitions.popTransitionSpec
             else -> EmptyNavTransitions.popTransitionSpec
-        }
+        },
+        predictivePopTransitionSpec = when (settings.ui.navigationAnimation) {
+            SettingNavigationAnimation.FADE -> FadeNavTransitions.predictivePopTransitionSpec
+            SettingNavigationAnimation.SLIDE -> DefaultNavTransitions.predictivePopTransitionSpec
+            else -> EmptyNavTransitions.predictivePopTransitionSpec
+        },
     )
 }
 
@@ -61,6 +66,7 @@ fun PagerNavHost(
         ),
         entryProvider = koinEntryProvider(),
         transitionSpec = FadeNavTransitions.transitionSpec,
-        popTransitionSpec = FadeNavTransitions.popTransitionSpec
+        popTransitionSpec = FadeNavTransitions.popTransitionSpec,
+        predictivePopTransitionSpec = FadeNavTransitions.predictivePopTransitionSpec,
     )
 }

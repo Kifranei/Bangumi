@@ -42,7 +42,7 @@ private fun IndexPageScreenContent(
     StateLazyColumn(
         pagingItems = pagingItems,
         modifier = Modifier.fillMaxSize(),
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         contentPadding = LocalIndexGridLayoutContentPadding.current,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         key = { item, _ -> item.id },

@@ -2,14 +2,10 @@
 
 package com.xiaoyv.bangumi.shared.ui.component.layout.state
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,22 +24,16 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.material.icons.rounded.Rocket
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -54,9 +44,8 @@ import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_no_more
 import com.xiaoyv.bangumi.shared.ui.component.layout.BgmRefreshBox
 import com.xiaoyv.bangumi.shared.ui.component.layout.LocalCollapsingPullRefresh
+import com.xiaoyv.bangumi.shared.ui.component.layout.refresh.rememberBgmPullToRefreshState
 import androidx.paging.compose.LazyPagingItems
-import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 private const val LOAD_MORE = "LOAD_MORE"
@@ -92,7 +81,7 @@ fun <T : Any> StateLazyColumn(
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     showContentLoadingWhenRefresh: Boolean = false,
-    showScrollUpBtn: Boolean = false,
+    enableDoubleTapToScrollTop: Boolean = false,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = pagingItems.itemCount > 0,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
@@ -119,7 +108,7 @@ fun <T : Any> StateLazyColumn(
         state = state,
         contentPadding = contentPadding,
         showContentLoadingWhenRefresh = showContentLoadingWhenRefresh,
-        showScrollUpBtn = showScrollUpBtn,
+        enableDoubleTapToScrollTop = enableDoubleTapToScrollTop,
         userScrollEnabled = userScrollEnabled,
         reverseLayout = reverseLayout,
         listVerticalArrangement = verticalArrangement,
@@ -170,7 +159,7 @@ fun <T : Any> StateLazyVerticalStaggeredGrid(
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     showContentLoadingWhenPullRefresh: Boolean = false,
-    showScrollUpBtn: Boolean = false,
+    enableDoubleTapToScrollTop: Boolean = false,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = pagingItems.itemCount > 0,
     verticalItemSpacing: Dp = 0.dp,
@@ -197,7 +186,7 @@ fun <T : Any> StateLazyVerticalStaggeredGrid(
         state = state,
         contentPadding = contentPadding,
         showContentLoadingWhenRefresh = showContentLoadingWhenPullRefresh,
-        showScrollUpBtn = showScrollUpBtn,
+        enableDoubleTapToScrollTop = enableDoubleTapToScrollTop,
         userScrollEnabled = userScrollEnabled,
         reverseLayout = reverseLayout,
         gridVerticalItemSpacing = verticalItemSpacing,
@@ -252,7 +241,7 @@ private fun <T : Any> StateLazyLayoutImpl(
     state: ScrollableState,
     contentPadding: PaddingValues,
     showContentLoadingWhenRefresh: Boolean,
-    showScrollUpBtn: Boolean,
+    enableDoubleTapToScrollTop: Boolean,
     onRefresh: (Boolean) -> Unit,
     emptyLayout: @Composable () -> Unit,
     loadLayout: @Composable () -> Unit,
@@ -271,7 +260,7 @@ private fun <T : Any> StateLazyLayoutImpl(
     itemContent: @Composable (Any.(T, Int) -> Unit),
 ) {
     var refreshing by rememberSaveable { mutableStateOf(false) }
-    val refreshPullState = rememberPullToRefreshState()
+    val refreshPullState = rememberBgmPullToRefreshState()
 
     val lazyRefreshState = pagingItems.loadState.refresh
 
@@ -293,7 +282,7 @@ private fun <T : Any> StateLazyLayoutImpl(
             Indicator(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isRefreshing = refreshing,
-                state = refreshPullState,
+                state = refreshPullState.material,
                 color = MaterialTheme.colorScheme.primary
             )
         },
@@ -359,7 +348,13 @@ private fun <T : Any> StateLazyLayoutImpl(
                     )
                 }
 
-                if (showScrollUpBtn) ScrollUpButton(state)
+                if (enableDoubleTapToScrollTop) {
+                    val listState = state
+                    DoubleTapToScrollTop(
+                        isScrolled = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0,
+                        onScrollToTop = { listState.animateScrollToItem(0) },
+                    )
+                }
             } else {
                 LazyVerticalStaggeredGrid(
                     modifier = Modifier.fillMaxSize(),
@@ -396,61 +391,17 @@ private fun <T : Any> StateLazyLayoutImpl(
                     )
                 }
 
-                if (showScrollUpBtn) ScrollUpButton(state)
+                if (enableDoubleTapToScrollTop) {
+                    val gridState = state
+                    DoubleTapToScrollTop(
+                        isScrolled = gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 0,
+                        onScrollToTop = { gridState.animateScrollToItem(0) },
+                    )
+                }
             }
         }
     }
 }
-
-@Composable
-private fun BoxScope.ScrollUpButton(state: LazyStaggeredGridState) {
-    val scope = rememberCoroutineScope()
-    var fabVisible by remember { mutableStateOf(false) }
-
-    AnimatedVisibility(
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp),
-        visible = fabVisible,
-        enter = scaleIn(),
-        exit = scaleOut()
-    ) {
-        FloatingActionButton(onClick = { scope.launch { state.scrollToItem(0) } }) {
-            Icon(BgmIcons.Rocket, contentDescription = null)
-        }
-    }
-
-    LaunchedEffect(state) {
-        snapshotFlow { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 }
-            .collect { shouldShow -> fabVisible = shouldShow }
-    }
-}
-
-
-@Composable
-private fun BoxScope.ScrollUpButton(state: LazyListState) {
-    val scope = rememberCoroutineScope()
-    var fabVisible by remember { mutableStateOf(false) }
-
-    AnimatedVisibility(
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp),
-        visible = fabVisible,
-        enter = scaleIn(),
-        exit = scaleOut()
-    ) {
-        FloatingActionButton(onClick = { scope.launch { state.scrollToItem(0) } }) {
-            Icon(BgmIcons.Rocket, contentDescription = null)
-        }
-    }
-
-    LaunchedEffect(state) {
-        snapshotFlow { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 }
-            .collect { shouldShow -> fabVisible = shouldShow }
-    }
-}
-
 
 private fun <T : Any> LazyStaggeredGridScope.gridStateLayout(
     pagingItems: LazyPagingItems<T>,

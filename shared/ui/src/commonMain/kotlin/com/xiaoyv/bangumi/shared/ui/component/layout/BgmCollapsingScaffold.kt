@@ -40,7 +40,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Velocity
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopHost
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopState
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.LocalDoubleTapToScrollTopState
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -143,6 +148,12 @@ fun BgmCollapsingScaffold(
 ) {
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
+    val doubleTapState = remember { DoubleTapToScrollTopState() }
+    val surfaceColor = if (isMiuixUi()) {
+        MiuixTheme.colorScheme.surface
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
 
     var minHeightPx by rememberSaveable { mutableIntStateOf(0) }
     var maxHeightPx by rememberSaveable { mutableIntStateOf(0) }
@@ -285,7 +296,7 @@ fun BgmCollapsingScaffold(
     // Content 专用的拖拽 Modifier (保证不可滚动/短内容拖拽时也可以折叠展开 Header，带真实物理惯性)
     val contentDragModifier = Modifier
         .fillMaxSize()
-        .background(MaterialTheme.colorScheme.surface)
+        .background(surfaceColor)
         .draggable(
             orientation = Orientation.Vertical,
             state = rememberDraggableState { delta ->
@@ -304,76 +315,80 @@ fun BgmCollapsingScaffold(
             }
         )
 
-    SubcomposeLayout(
-        modifier = modifier
-            .windowInsetsPadding(windowInsets)
-            .nestedScroll(nestedScrollConnection)
-    ) { constraints ->
-        val topBarPlaceable = subcompose(BgmCollapsingSlot.TOP_BAR) {
-            if (topBar != null) {
-                Box(modifier = topBarDragModifier) {
-                    topBar(scrollProgressLambda)
+    CompositionLocalProvider(LocalDoubleTapToScrollTopState provides doubleTapState) {
+        SubcomposeLayout(
+            modifier = modifier
+                .windowInsetsPadding(windowInsets)
+                .nestedScroll(nestedScrollConnection)
+        ) { constraints ->
+            val topBarPlaceable = subcompose(BgmCollapsingSlot.TOP_BAR) {
+                if (topBar != null) {
+                    DoubleTapToScrollTopHost(doubleTapState) {
+                        Box(modifier = topBarDragModifier) {
+                            topBar(scrollProgressLambda)
+                        }
+                    }
                 }
+            }.firstOrNull()?.measure(constraints.copy(minHeight = 0))
+
+            val measuredMinHeight = topBarPlaceable?.height ?: 0
+            if (minHeightPx != measuredMinHeight) {
+                minHeightPx = measuredMinHeight
             }
-        }.firstOrNull()?.measure(constraints.copy(minHeight = 0))
+            val pinPadding = with(density) { PaddingValues(top = minHeightPx.toDp()) }
 
-        val measuredMinHeight = topBarPlaceable?.height ?: 0
-        if (minHeightPx != measuredMinHeight) {
-            minHeightPx = measuredMinHeight
-        }
-        val pinPadding = with(density) { PaddingValues(top = minHeightPx.toDp()) }
+            val collapsePlaceable = subcompose(BgmCollapsingSlot.COLLAPSE) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(state)
+                ) {
+                    collapse(pinPadding)
+                }
+            }.firstOrNull()?.measure(constraints.copy(minHeight = 0, maxHeight = 262142))
 
-        val collapsePlaceable = subcompose(BgmCollapsingSlot.COLLAPSE) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(state)
-            ) {
-                collapse(pinPadding)
+            val measuredMaxHeight = collapsePlaceable?.height ?: 0
+            if (maxHeightPx != measuredMaxHeight) {
+                maxHeightPx = measuredMaxHeight
             }
-        }.firstOrNull()?.measure(constraints.copy(minHeight = 0, maxHeight = 262142))
-
-        val measuredMaxHeight = collapsePlaceable?.height ?: 0
-        if (maxHeightPx != measuredMaxHeight) {
-            maxHeightPx = measuredMaxHeight
-        }
 
         // --- 测量 Content 区域 ---
-        val contentConstraints = constraints.copy(minHeight = 0)
-        val contentPlaceable = subcompose(BgmCollapsingSlot.CONTENT) {
-            CompositionLocalProvider(LocalCollapsingPullRefresh provides isAtTop) {
-                Box(modifier = contentDragModifier) {
-                    content(scrollProgressLambda)
+            val contentConstraints = constraints.copy(minHeight = 0)
+            val contentPlaceable = subcompose(BgmCollapsingSlot.CONTENT) {
+                CompositionLocalProvider(LocalCollapsingPullRefresh provides isAtTop) {
+                    Box(modifier = contentDragModifier) {
+                        content(scrollProgressLambda)
+                    }
                 }
-            }
-        }.first().measure(contentConstraints.copy(maxHeight = contentConstraints.maxHeight - minHeightPx))
+            }.first().measure(contentConstraints.copy(maxHeight = contentConstraints.maxHeight - minHeightPx))
 
         // --- 测量 Overlay ---
-        val overlayPlaceable = subcompose(BgmCollapsingSlot.OVERLAY) {
-            if (overlay != null) overlay()
-        }.firstOrNull()?.measure(constraints)
+            val overlayPlaceable = subcompose(BgmCollapsingSlot.OVERLAY) {
+                if (overlay != null) overlay()
+            }.firstOrNull()?.measure(constraints)
 
         // --- 布局 (Layout) ---
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            val currentOffsetPx = collapsingState.currentOffset.roundToInt()
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                val currentOffsetPx = collapsingState.currentOffset.roundToInt()
 
             // Content: 位于 Header 底部，随 offset 移动
-            contentPlaceable.placeRelative(
-                x = 0,
-                y = maxHeightPx + currentOffsetPx
-            )
+                contentPlaceable.placeRelative(
+                    x = 0,
+                    y = maxHeightPx + currentOffsetPx
+                )
 
             // Collapse: 始终从 0 开始，随 offset 移动，实现折叠效果
-            collapsePlaceable?.placeRelative(
-                x = 0,
-                y = currentOffsetPx
-            )
+                collapsePlaceable?.placeRelative(
+                    x = 0,
+                    y = currentOffsetPx
+                )
 
             // TopBar: 固定不动
-            topBarPlaceable?.placeRelative(x = 0, y = 0)
+                topBarPlaceable?.placeRelative(x = 0, y = 0)
 
             // Overlay
-            overlayPlaceable?.placeRelative(x = 0, y = 0)
+                overlayPlaceable?.placeRelative(x = 0, y = 0)
+            }
         }
     }
 }

@@ -1,11 +1,7 @@
 package com.xiaoyv.bangumi.shared.ui.component.layout.state
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,30 +15,23 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.icons.rounded.Rocket
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import com.xiaoyv.bangumi.shared.ui.component.layout.BgmRefreshBox
 import com.xiaoyv.bangumi.shared.ui.component.layout.LocalCollapsingPullRefresh
+import com.xiaoyv.bangumi.shared.ui.component.layout.refresh.rememberBgmPullToRefreshState
 import androidx.paging.compose.LazyPagingItems
-import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
-import kotlinx.coroutines.launch
 
 private const val LOAD_MORE = "LOAD_MORE"
 private const val REFRESH_LOADING = "REFRESH_LOADING"
@@ -58,7 +47,7 @@ fun <T : Any> StateLazyVerticalGrid(
     state: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     showContentLoadingWhenPullRefresh: Boolean = false,
-    showScrollUpBtn: Boolean = false,
+    enableDoubleTapToScrollTop: Boolean = false,
     reverseLayout: Boolean = false,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
@@ -77,7 +66,7 @@ fun <T : Any> StateLazyVerticalGrid(
     itemContent: @Composable (LazyGridItemScope.(T, Int) -> Unit),
 ) {
     var refreshing by rememberSaveable { mutableStateOf(false) }
-    val refreshPullState = rememberPullToRefreshState()
+    val refreshPullState = rememberBgmPullToRefreshState()
     val lazyRefreshState = pagingItems.loadState.refresh
 
     LaunchedEffect(lazyRefreshState) {
@@ -97,7 +86,7 @@ fun <T : Any> StateLazyVerticalGrid(
             Indicator(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isRefreshing = refreshing,
-                state = refreshPullState,
+                state = refreshPullState.material,
                 color = MaterialTheme.colorScheme.primary
             )
         },
@@ -163,12 +152,15 @@ fun <T : Any> StateLazyVerticalGrid(
                 )
             }
 
-            if (showScrollUpBtn) ScrollUpButton(state)
+            if (enableDoubleTapToScrollTop) {
+                DoubleTapToScrollTop(
+                    isScrolled = state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0,
+                    onScrollToTop = { state.animateScrollToItem(0) },
+                )
+            }
         }
     }
 }
-
-
 private fun <T : Any> LazyGridScope.gridStateLayout(
     pagingItems: LazyPagingItems<T>,
     refreshing: Boolean,
@@ -224,29 +216,5 @@ private fun <T : Any> LazyGridScope.gridStateLayout(
                 )
             }
         )
-    }
-}
-
-@Composable
-private fun BoxScope.ScrollUpButton(state: LazyGridState) {
-    val scope = rememberCoroutineScope()
-    var fabVisible by remember { mutableStateOf(false) }
-
-    AnimatedVisibility(
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp),
-        visible = fabVisible,
-        enter = scaleIn(),
-        exit = scaleOut()
-    ) {
-        FloatingActionButton(onClick = { scope.launch { state.scrollToItem(0) } }) {
-            Icon(BgmIcons.Rocket, contentDescription = null)
-        }
-    }
-
-    LaunchedEffect(state) {
-        snapshotFlow { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 }
-            .collect { shouldShow -> fabVisible = shouldShow }
     }
 }

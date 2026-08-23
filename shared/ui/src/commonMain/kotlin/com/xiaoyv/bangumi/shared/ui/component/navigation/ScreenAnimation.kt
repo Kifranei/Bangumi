@@ -15,6 +15,7 @@ import androidx.navigation3.scene.Scene
 import kotlin.reflect.KClass
 
 private const val DURATION = AnimationConstants.DefaultDurationMillis
+private const val EDGE_RIGHT = 1
 
 private val IosTransitionEasing = CubicBezierEasing(0.2833f, 0.99f, 0.31833f, 0.99f)
 private val SPEC_OFFSET = tween<IntOffset>(DURATION, easing = IosTransitionEasing)
@@ -36,6 +37,12 @@ object EmptyNavTransitions {
         )
     }
     val popTransitionSpec: AnimatedContentTransitionScope<Scene<NavKey>>.() -> ContentTransform = {
+        ContentTransform(
+            EnterTransition.None,
+            ExitTransition.None
+        )
+    }
+    val predictivePopTransitionSpec: AnimatedContentTransitionScope<Scene<NavKey>>.(Int) -> ContentTransform = {
         ContentTransform(
             EnterTransition.None,
             ExitTransition.None
@@ -79,6 +86,29 @@ object DefaultNavTransitions {
             )
         }
     }
+
+    val predictivePopTransitionSpec: AnimatedContentTransitionScope<Scene<NavKey>>.(Int) -> ContentTransform = { edge ->
+        if (initialStateIsNavKey(Screen.PreviewMain::class)) {
+            ContentTransform(fadeIn(SPEC_FLOAT), fadeOut(SPEC_FLOAT))
+        } else {
+            val direction = if (edge == EDGE_RIGHT) {
+                AnimatedContentTransitionScope.SlideDirection.End
+            } else {
+                AnimatedContentTransitionScope.SlideDirection.Start
+            }
+            ContentTransform(
+                fadeIn(SPEC_FLOAT) + slideIntoContainer(
+                    towards = direction,
+                    animationSpec = SPEC_OFFSET,
+                    initialOffset = { fullOffset -> (fullOffset * 0.3f).toInt() }
+                ),
+                slideOutOfContainer(
+                    towards = direction,
+                    animationSpec = SPEC_OFFSET,
+                )
+            )
+        }
+    }
 }
 
 
@@ -88,6 +118,10 @@ object FadeNavTransitions {
     }
 
     val popTransitionSpec: AnimatedContentTransitionScope<Scene<NavKey>>.() -> ContentTransform = {
+        ContentTransform(fadeIn(SPEC_FLOAT), fadeOut(SPEC_FLOAT))
+    }
+
+    val predictivePopTransitionSpec: AnimatedContentTransitionScope<Scene<NavKey>>.(Int) -> ContentTransform = {
         ContentTransform(fadeIn(SPEC_FLOAT), fadeOut(SPEC_FLOAT))
     }
 }

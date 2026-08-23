@@ -78,7 +78,7 @@ private fun BlogPageScreenContent(
     StateLazyColumn(
         pagingItems = pagingItems,
         modifier = Modifier.fillMaxSize(),
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.uniqueKey },
         contentType = { CONTENT_TYPE_BLOG_ITEM }
     ) { item, _ ->

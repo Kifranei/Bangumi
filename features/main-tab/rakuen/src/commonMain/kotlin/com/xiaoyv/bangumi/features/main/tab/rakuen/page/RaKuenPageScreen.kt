@@ -30,7 +30,7 @@ fun RaKuenPageScreen(
     StateLazyColumn(
         modifier = Modifier.fillMaxSize(),
         pagingItems = viewModel.rakuenFlow.collectAsLazyPagingItems(),
-        showScrollUpBtn = true,
+        enableDoubleTapToScrollTop = true,
         key = { item, _ -> item.key },
         contentType = { CONTENT_TYPE_RAKUEN }
     ) { item, _ ->

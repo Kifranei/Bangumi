@@ -24,6 +24,8 @@ import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -44,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeList
 import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.DoubleTapToScrollTopState
+import com.xiaoyv.bangumi.shared.ui.component.layout.state.LocalDoubleTapToScrollTopState
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 import com.xiaoyv.bangumi.shared.ui.theme.MinTabWidth
@@ -90,6 +94,22 @@ fun <Key : Any> BgmTabHorizontalPager(
     val scope = rememberCoroutineScope()
     val currentPage = pagerState.currentPage.coerceAtMost(tabs.size - 1)
     var inputType by remember { mutableStateOf(PointerType.Touch) }
+    val doubleTapStates = remember(tabs.size) { List(tabs.size) { DoubleTapToScrollTopState() } }
+    val parentDoubleTapState = LocalDoubleTapToScrollTopState.current
+
+    DisposableEffect(parentDoubleTapState, currentPage, doubleTapStates) {
+        val currentState = doubleTapStates.getOrNull(currentPage)
+        if (currentState != null) parentDoubleTapState?.delegateTo(currentState)
+        onDispose { if (currentState != null) parentDoubleTapState?.clearDelegate(currentState) }
+    }
+
+    val pageWithDoubleTapState: @Composable (Int) -> Unit = { page ->
+        if (parentDoubleTapState == null) pageContent(page) else {
+            CompositionLocalProvider(LocalDoubleTapToScrollTopState provides doubleTapStates[page]) {
+                pageContent(page)
+            }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         if (tabs.size > 1 && isMiuixUi()) {
@@ -207,7 +227,7 @@ fun <Key : Any> BgmTabHorizontalPager(
         }
 
         if (tabs.size == 1) {
-            pageContent(0)
+            pageWithDoubleTapState(0)
         } else {
             divider()
             HorizontalPager(
@@ -229,7 +249,7 @@ fun <Key : Any> BgmTabHorizontalPager(
                 userScrollEnabled = inputType == PointerType.Touch && userScrollEnabled,
                 beyondViewportPageCount = beyondViewportPageCount,
                 key = key,
-                pageContent = { pageContent(it) }
+                pageContent = { pageWithDoubleTapState(it) }
             )
         }
     }
