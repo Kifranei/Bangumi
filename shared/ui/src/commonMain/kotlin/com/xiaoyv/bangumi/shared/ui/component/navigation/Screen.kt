@@ -51,6 +51,7 @@ val stateConfiguration = SavedStateConfiguration {
             subclass(Screen.SettingsPrivacy::class, Screen.SettingsPrivacy.serializer())
             subclass(Screen.SettingsTranslate::class, Screen.SettingsTranslate.serializer())
             subclass(Screen.SettingsUi::class, Screen.SettingsUi.serializer())
+            subclass(Screen.SettingsAbout::class, Screen.SettingsAbout.serializer())
             subclass(Screen.Notification::class, Screen.Notification.serializer())
             subclass(Screen.MessageMain::class, Screen.MessageMain.serializer())
             subclass(Screen.MessageChat::class, Screen.MessageChat.serializer())
@@ -165,6 +166,9 @@ sealed class Screen(
 
     @Serializable
     data object SettingsUi : Screen(SCREEN_ROUTE_SETTINGS_UI)
+
+    @Serializable
+    data object SettingsAbout : Screen(SCREEN_ROUTE_SETTINGS_ABOUT)
 
     @Serializable
     data object Notification : Screen(SCREEN_ROUTE_NOTIFICATION)

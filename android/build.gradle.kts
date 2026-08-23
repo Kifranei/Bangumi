@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -24,7 +25,7 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.xiaoyv.bangumi.multiplatform"
+        applicationId = "com.kifranei.bgm.miuix"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 2
@@ -70,10 +71,26 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("$rootDir/android/keystore/why.keystore")
-            storePassword = "why981229"
-            keyAlias = "whykey"
-            keyPassword = "why981229"
+            val localProps = Properties()
+            val localFile = rootProject.file("local.properties")
+            if (localFile.exists()) {
+                localFile.inputStream().use { localProps.load(it) }
+            }
+            fun secret(key: String, env: String, fallback: String) =
+                localProps.getProperty(key) ?: System.getenv(env) ?: fallback
+
+            storeFile = file(
+                secret(
+                    "RELEASE_STORE_FILE",
+                    "BGM_RELEASE_STORE_FILE",
+                    "$rootDir/android/keystore/why.keystore",
+                )
+            )
+            storePassword = secret("RELEASE_STORE_PASSWORD", "BGM_RELEASE_STORE_PASSWORD", "why981229")
+            keyAlias = secret("RELEASE_KEY_ALIAS", "BGM_RELEASE_KEY_ALIAS", "whykey")
+            keyPassword = secret("RELEASE_KEY_PASSWORD", "BGM_RELEASE_KEY_PASSWORD", "why981229")
+            enableV3Signing = true
+            enableV4Signing = true
         }
     }
 

@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -95,7 +95,7 @@ private fun WebScreen(
     onUiEvent: (WebEvent.UI) -> Unit,
     onActionEvent: (WebEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(

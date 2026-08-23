@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -36,6 +35,7 @@ import com.xiaoyv.bangumi.features.settings.privacy.business.SettingsPrivacyView
 import com.xiaoyv.bangumi.shared.core.mvi.UiState
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.user.ComposeUserPrivacy
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.settings.SettingContainer
@@ -77,9 +77,9 @@ private fun SettingsPrivacyScreen(
     onUiEvent: (SettingsPrivacyEvent.UI) -> Unit,
     onActionEvent: (SettingsPrivacyEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),

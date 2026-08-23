@@ -12,9 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,6 +30,7 @@ import com.xiaoyv.bangumi.features.mikan.studio.business.MikanStudioViewModel
 import com.xiaoyv.bangumi.shared.System
 import com.xiaoyv.bangumi.shared.core.mvi.UiState
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
 import com.xiaoyv.bangumi.shared.ui.component.image.StateImage
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
@@ -74,9 +74,9 @@ private fun MikanStudioScreen(
     onUiEvent: (MikanStudioEvent.UI) -> Unit,
     onActionEvent: (MikanStudioEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),

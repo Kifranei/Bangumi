@@ -2,7 +2,7 @@ package com.xiaoyv.bangumi.features.main.tab.newest
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -58,7 +58,7 @@ private fun NewestScreen(
     onUiEvent: (NewestEvent.UI) -> Unit,
     onActionEvent: (NewestEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(

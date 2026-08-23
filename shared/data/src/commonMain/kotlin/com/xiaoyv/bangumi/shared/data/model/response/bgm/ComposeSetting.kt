@@ -8,6 +8,7 @@ import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingIndication
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingNavigationAnimation
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingTheme
+import com.xiaoyv.bangumi.shared.core.types.settings.SettingUiStyle
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingUpdateChannel
 import com.xiaoyv.bangumi.shared.core.utils.serialization.SerializeMap
 import kotlinx.collections.immutable.persistentMapOf
@@ -37,6 +38,9 @@ data class ComposeSetting(
     @Serializable
     @Immutable
     data class UIConfig(
+        @field:SettingUiStyle
+        @SerialName("style") val style: Int = SettingUiStyle.MIUIX,
+
         @field:SettingTheme
         @SerialName("theme") val theme: Int = SettingTheme.SYSTEM,
 
@@ -54,6 +58,9 @@ data class ComposeSetting(
 
         @SerialName("timeMachineGridLimit") val timeMachineGridLimit: Int = 10,
         @SerialName("trackingGridLineLimit") val trackingGridLineLimit: Int = 4,
+        @SerialName("themeColor") val themeColor: Long = 0xFFB44C71,
+        @SerialName("monetTheme") val monetTheme: Boolean = false,
+        @SerialName("hiddenHomeShortcuts") val hiddenHomeShortcuts: List<String> = emptyList(),
     ) {
         companion object {
             val Default = UIConfig()

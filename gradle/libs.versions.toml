@@ -48,6 +48,7 @@ benchmarkMacroJunit4 = "1.4.1"
 baselineprofile = "1.5.0-rc01"
 profileinstaller = "1.4.1"
 compose-markdown = "0.43.0"
+miuix = "0.9.3"
 
 [libraries]
 gradle-plugin-compose-compiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin-compose-compiler" }
@@ -184,6 +185,12 @@ filekit-coil = { module = "io.github.vinceglb:filekit-coil", version.ref = "file
 
 krop = { module = "com.attafitamim.krop:core", version.ref = "krop" }
 krop-file = { module = "com.attafitamim.krop:extensions-filekit", version.ref = "krop" }
+
+# Miuix
+miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
+miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
+miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons", version.ref = "miuix" }
+miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur", version.ref = "miuix" }
 
 
 [bundles]

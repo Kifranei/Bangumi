@@ -22,6 +22,9 @@ import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import com.xiaoyv.bangumi.shared.ui.theme.BgmAppTheme
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 /**
  * [AlertOptionDialog]
@@ -36,45 +39,67 @@ fun <Key : Any> AlertOptionDialog(
     items: SerializeList<ComposeTextTab<Key>>,
     onClick: (ComposeTextTab<Key>, Int) -> Unit,
 ) {
-    if (state.showing) BasicAlertDialog(onDismissRequest = { state.dismiss() }) {
-        BgmAppTheme(
-            modifier = Modifier
-                .height(IntrinsicSize.Min)
-                .clip(AlertDialogDefaults.shape)
-                .background(AlertDialogDefaults.containerColor)
-                .padding(top = 12.dp, bottom = 20.dp)
+    if (isMiuixUi()) {
+        OverlayDialog(
+            show = state.showing,
+            title = title,
+            summary = message,
+            onDismissRequest = { state.dismiss() },
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                if (title != null) Text(
-                    modifier = Modifier.padding(
-                        vertical = ContentMargin,
-                        horizontal = 20.dp
-                    ),
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                if (message != null) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = ContentMarginHalf),
-                        text = message,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                items.fastForEachIndexed { i, tab ->
+                    MiuixTextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = tab.displayText(),
+                        onClick = {
+                            onClick(tab, i)
+                            state.dismiss()
+                        },
                     )
                 }
-
-                items.fastForEachIndexed { i, tab ->
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onClick(tab, i)
-                                state.dismiss()
-                            }
-                            .padding(horizontal = 20.dp, vertical = ContentMargin),
-                        text = tab.displayText(),
-                        color = MaterialTheme.colorScheme.onSurface
+            }
+        }
+    } else if (state.showing) {
+        BasicAlertDialog(onDismissRequest = { state.dismiss() }) {
+            BgmAppTheme(
+                modifier = Modifier
+                    .height(IntrinsicSize.Min)
+                    .clip(AlertDialogDefaults.shape)
+                    .background(AlertDialogDefaults.containerColor)
+                    .padding(top = 12.dp, bottom = 20.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (title != null) Text(
+                        modifier = Modifier.padding(
+                            vertical = ContentMargin,
+                            horizontal = 20.dp
+                        ),
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge
                     )
+
+                    if (message != null) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = ContentMarginHalf),
+                            text = message,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    items.fastForEachIndexed { i, tab ->
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onClick(tab, i)
+                                    state.dismiss()
+                                }
+                                .padding(horizontal = 20.dp, vertical = ContentMargin),
+                            text = tab.displayText(),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
@@ -88,17 +113,27 @@ fun AlertContentDialog(
     properties: DialogProperties = DialogProperties(),
     content: @Composable () -> Unit,
 ) {
-    if (state.showing) BasicAlertDialog(
-        modifier = modifier,
-        properties = properties,
-        onDismissRequest = { state.dismiss() }
-    ) {
-        BgmAppTheme(
-            modifier = Modifier
-                .clip(AlertDialogDefaults.shape)
-                .background(AlertDialogDefaults.containerColor)
+    if (isMiuixUi()) {
+        OverlayDialog(
+            show = state.showing,
+            modifier = modifier,
+            onDismissRequest = { state.dismiss() },
         ) {
             content()
+        }
+    } else if (state.showing) {
+        BasicAlertDialog(
+            modifier = modifier,
+            properties = properties,
+            onDismissRequest = { state.dismiss() }
+        ) {
+            BgmAppTheme(
+                modifier = Modifier
+                    .clip(AlertDialogDefaults.shape)
+                    .background(AlertDialogDefaults.containerColor)
+            ) {
+                content()
+            }
         }
     }
 }

@@ -13,12 +13,9 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.LineStyle
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +37,7 @@ import com.xiaoyv.bangumi.shared.core.types.SubjectSortBrowserType
 import com.xiaoyv.bangumi.shared.data.manager.shared.LocalHideNavIcon
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmTopAppBar
 import com.xiaoyv.bangumi.shared.ui.component.chip.DropMenuChip
+import com.xiaoyv.bangumi.shared.ui.component.chip.FilterActionChip
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.rememberAlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.date.MonthPicker
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
@@ -84,7 +82,7 @@ private fun SubjectBrowserScreen(
     onUiEvent: (SubjectBrowserEvent.UI) -> Unit,
     onActionEvent: (SubjectBrowserEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
@@ -209,26 +207,20 @@ private fun SubjectBrowserScreenContent(
                     }
                 )
 
-                AssistChip(
+                FilterActionChip(
                     onClick = { yearPickerDialogState.show() },
-                    colors = AssistChipDefaults.assistChipColors(labelColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                    label = {
-                        Text(
-                            text = buildString {
-                                append(stringResource(Res.string.global_date))
-                                append(" ")
-
-                                val year = param.browser.year
-                                val month = param.browser.month
-                                if (year == 0 && month == 0) {
-                                    append(stringResource(Res.string.global_all))
-                                } else {
-                                    if (year > 0) append("${year}年")
-                                    if (month > 0) append("${month}月")
-                                }
-                            }
-                        )
-                    }
+                    text = buildString {
+                        append(stringResource(Res.string.global_date))
+                        append(" ")
+                        val year = param.browser.year
+                        val month = param.browser.month
+                        if (year == 0 && month == 0) {
+                            append(stringResource(Res.string.global_all))
+                        } else {
+                            if (year > 0) append("${year}年")
+                            if (month > 0) append("${month}月")
+                        }
+                    },
                 )
             }
         }

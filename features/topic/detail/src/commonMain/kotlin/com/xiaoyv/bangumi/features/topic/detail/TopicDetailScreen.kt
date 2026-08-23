@@ -23,7 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -127,7 +127,7 @@ private fun TopicDetailScreen(
     onUiEvent: (TopicDetailEvent.UI) -> Unit,
     onActionEvent: (TopicDetailEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(

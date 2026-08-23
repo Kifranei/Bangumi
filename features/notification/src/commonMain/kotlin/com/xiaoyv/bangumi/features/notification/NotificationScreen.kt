@@ -14,7 +14,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -93,7 +93,7 @@ private fun NotificationScreen(
     onUiEvent: (NotificationEvent.UI) -> Unit,
     onActionEvent: (NotificationEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(

@@ -3,7 +3,9 @@ package com.xiaoyv.bangumi.shared.ui.component.dialog.date
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -32,11 +35,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.xiaoyv.bangumi.core_resource.resources.Res
 import com.xiaoyv.bangumi.core_resource.resources.global_all
+import com.xiaoyv.bangumi.core_resource.resources.global_cancel
+import com.xiaoyv.bangumi.core_resource.resources.global_confirm
 import com.xiaoyv.bangumi.shared.core.utils.currentYear
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.AlertDialogState
 import com.xiaoyv.bangumi.shared.ui.component.dialog.alert.BgmAlertDialog
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.NumberPicker
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 
 @Composable
 fun <T> WheelPicker(
@@ -149,6 +158,18 @@ fun MonthPicker(
     wheelHeight: Dp = 200.dp,
     wheelVisibleCount: Int = 5,
 ) {
+    if (isMiuixUi()) {
+        MiuixMonthPicker(
+            dialogState = dialogState,
+            currentMonth = currentMonth,
+            currentYear = currentYear,
+            onConfirm = onConfirm,
+            wheelHeight = wheelHeight,
+            wheelVisibleCount = wheelVisibleCount,
+        )
+        return
+    }
+
     var month by remember { mutableStateOf(currentMonth) }
     var year by remember { mutableStateOf(currentYear) }
     val years = remember {
@@ -219,4 +240,80 @@ fun MonthPicker(
             }
         }
     )
+}
+
+@Composable
+private fun MiuixMonthPicker(
+    dialogState: AlertDialogState,
+    currentMonth: Int,
+    currentYear: Int,
+    onConfirm: (Int, Int) -> Unit,
+    wheelHeight: Dp,
+    wheelVisibleCount: Int,
+) {
+    var month by remember { mutableIntStateOf(currentMonth) }
+    var year by remember { mutableIntStateOf(currentYear) }
+    val years = remember {
+        buildList {
+            add(0)
+            addAll((1970..currentYear() + 5).reversed())
+        }
+    }
+    val yearIndex = years.indexOf(year).coerceAtLeast(0)
+    val allLabel = stringResource(Res.string.global_all)
+    val showing = dialogState.showing
+
+    OverlayDialog(
+        show = showing,
+        title = "选择日期",
+        onDismissRequest = {
+            month = currentMonth
+            year = currentYear
+            dialogState.dismiss()
+        },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(wheelHeight),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NumberPicker(
+                    modifier = Modifier.weight(1f),
+                    value = yearIndex,
+                    onValueChange = { year = years[it] },
+                    range = years.indices,
+                    visibleItemCount = wheelVisibleCount,
+                    label = { if (years[it] == 0) allLabel else "${years[it]}年" },
+                )
+                NumberPicker(
+                    modifier = Modifier.weight(1f),
+                    value = month,
+                    onValueChange = { month = it },
+                    range = 0..12,
+                    visibleItemCount = wheelVisibleCount,
+                    label = { if (it == 0) allLabel else "${it}月" },
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            MiuixTextButton(
+                text = stringResource(Res.string.global_confirm),
+                onClick = {
+                    onConfirm(year, month)
+                    dialogState.dismiss()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuixTextButton(
+                text = stringResource(Res.string.global_cancel),
+                onClick = {
+                    month = currentMonth
+                    year = currentYear
+                    dialogState.dismiss()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }

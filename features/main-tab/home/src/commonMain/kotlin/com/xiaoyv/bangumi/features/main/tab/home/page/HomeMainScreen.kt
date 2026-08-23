@@ -49,6 +49,7 @@ import com.xiaoyv.bangumi.shared.core.types.FeatureType
 import com.xiaoyv.bangumi.shared.core.types.SubjectSortBrowserType
 import com.xiaoyv.bangumi.shared.core.types.SubjectType
 import com.xiaoyv.bangumi.shared.data.model.request.list.subject.SubjectBrowserBody
+import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeHomepageCard
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.subject.ComposeSubjectDisplay
 import com.xiaoyv.bangumi.shared.ui.component.image.InfoImage
@@ -59,6 +60,7 @@ import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.component.space.LayoutGridWidth
 import com.xiaoyv.bangumi.shared.ui.component.text.SectionTitle
 import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.mainHomeActions
+import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeDrawableTab
 import com.xiaoyv.bangumi.shared.ui.kts.isExtraSmallScreen
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
@@ -82,6 +84,11 @@ fun HomeMainScreen(
     onUiEvent: (HomeEvent.UI) -> Unit,
     onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
+    val hiddenHomeShortcuts = currentSettings().ui.hiddenHomeShortcuts
+    val visibleHomeActions = remember(hiddenHomeShortcuts) {
+        mainHomeActions.filter { it.type.toString() !in hiddenHomeShortcuts }
+    }
+
     StateLayout(
         modifier = Modifier.fillMaxSize(),
         uiState = uiState,
@@ -98,8 +105,10 @@ fun HomeMainScreen(
             item(key = CONTENT_TYPE_BANNER, contentType = CONTENT_TYPE_BANNER) {
                 HomeMainBanner(state, onUiEvent, onActionEvent)
             }
-            item(key = CONTENT_TYPE_ACTION, contentType = CONTENT_TYPE_ACTION) {
-                HomeMainAction(state, onUiEvent, onActionEvent)
+            if (visibleHomeActions.isNotEmpty()) {
+                item(key = CONTENT_TYPE_ACTION, contentType = CONTENT_TYPE_ACTION) {
+                    HomeMainAction(visibleHomeActions, onUiEvent)
+                }
             }
             item(key = CONTENT_TYPE_CALENDAR, contentType = CONTENT_TYPE_CALENDAR) {
                 HomeMainCalendar(state, onUiEvent, onActionEvent)
@@ -146,9 +155,8 @@ fun HomeMainBanner(
 
 @Composable
 fun HomeMainAction(
-    state: HomeState,
+    actions: List<ComposeDrawableTab>,
     onUiEvent: (HomeEvent.UI) -> Unit,
-    onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
     val space = if (isExtraSmallScreen) 16.dp else 24.dp
     val scope = rememberCoroutineScope()
@@ -161,7 +169,7 @@ fun HomeMainAction(
             .fillMaxWidth()
             .padding(ContentMargin),
     ) {
-        mainHomeActions.forEach {
+        actions.forEach {
             val label = stringResource(it.label)
 
             Column(

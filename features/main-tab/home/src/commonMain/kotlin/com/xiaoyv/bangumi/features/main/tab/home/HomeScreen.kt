@@ -8,7 +8,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +39,7 @@ import com.xiaoyv.bangumi.shared.ui.component.pager.BgmTabHorizontalPager
 import com.xiaoyv.bangumi.shared.ui.composition.TabTokens.mainHomeTabs
 import com.xiaoyv.bangumi.shared.ui.kts.collectBaseSideEffect
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.orbitmvi.orbit.compose.collectAsState
@@ -73,20 +74,24 @@ private fun HomeScreen(
     onUiEvent: (HomeEvent.UI) -> Unit,
     onActionEvent: (HomeEvent.Action) -> Unit,
 ) {
-    Scaffold(
+    val miuix = isMiuixUi()
+    val logo: @Composable () -> Unit = {
+        Icon(
+            modifier = Modifier
+                .height(if (miuix) 28.dp else 32.dp)
+                .aspectRatio(27 / 7f),
+            painter = painterResource(Res.drawable.ic_logo_riff),
+            tint = MaterialTheme.colorScheme.primary,
+            contentDescription = stringResource(Res.string.app_name),
+        )
+    }
+
+    BgmScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BgmTopAppBar(
-                titleContent = {
-                    Icon(
-                        modifier = Modifier
-                            .height(32.dp)
-                            .aspectRatio(27 / 7f),
-                        painter = painterResource(Res.drawable.ic_logo_riff),
-                        tint = MaterialTheme.colorScheme.primary,
-                        contentDescription = stringResource(Res.string.app_name),
-                    )
-                },
+                titleContent = { if (!miuix) logo() },
+                navigationIcon = if (miuix) logo else null,
                 actions = {
                     if (LocalSharedState.current.isLogin) {
                         Text(

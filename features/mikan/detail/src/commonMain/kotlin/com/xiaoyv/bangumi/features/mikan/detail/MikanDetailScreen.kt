@@ -20,10 +20,9 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import com.xiaoyv.bangumi.features.mikan.detail.business.MikanDetailViewModel
 import com.xiaoyv.bangumi.shared.System
 import com.xiaoyv.bangumi.shared.core.mvi.UiState
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
+import com.xiaoyv.bangumi.shared.ui.component.bar.rememberBgmScrollBehavior
 import com.xiaoyv.bangumi.shared.ui.component.layout.state.StateLayout
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
@@ -89,9 +89,9 @@ private fun MikanDetailScreen(
     onUiEvent: (MikanDetailEvent.UI) -> Unit,
     onActionEvent: (MikanDetailEvent.Action) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberBgmScrollBehavior()
 
-    Scaffold(
+    BgmScaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),

@@ -47,6 +47,7 @@ import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 import com.xiaoyv.bangumi.shared.ui.theme.MinTabWidth
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -91,7 +92,26 @@ fun <Key : Any> BgmTabHorizontalPager(
     var inputType by remember { mutableStateOf(PointerType.Touch) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        if (tabs.size > 1) {
+        if (tabs.size > 1 && isMiuixUi()) {
+            BgmMiuixTabRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .semantics { contentDescription = "scrollable_tab" },
+                tabs = tabs.map { it.displayText() },
+                selectedTabIndex = currentPage,
+                onTabSelected = { index ->
+                    scope.launch {
+                        if (index != currentPage) onTabSelected(index)
+                        if (abs(currentPage - index) > 1) {
+                            pagerState.scrollToPage(index)
+                        } else {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    }
+                },
+            )
+        } else if (tabs.size > 1) {
             SecondaryScrollableTabRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -236,23 +256,40 @@ fun <Key : Any> BgmChipHorizontalPager(
     pageContent: @Composable (page: Int) -> Unit,
 ) {
     Column(modifier = modifier) {
-        if (tabs.size > 1) LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(vertical = ContentMarginHalf, horizontal = 12.dp),
-            state = listState,
-            horizontalArrangement = Arrangement.spacedBy(ContentMarginHalf)
-        ) {
-            itemsIndexed(tabs) { index, tab ->
-                FilterChip(
-                    selected = index == pagerState.currentPage,
-                    label = { Text(text = tab.displayText()) },
-                    onClick = {
+        if (tabs.size > 1) {
+            if (isMiuixUi()) {
+                BgmMiuixTabRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = ContentMarginHalf),
+                    tabs = tabs.map { it.displayText() },
+                    selectedTabIndex = pagerState.currentPage,
+                    listState = listState,
+                    onTabSelected = { index ->
                         onTabSelected(index)
                         scope.launch { pagerState.scrollToPage(index) }
-                    }
+                    },
                 )
+            } else {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(vertical = ContentMarginHalf, horizontal = 12.dp),
+                    state = listState,
+                    horizontalArrangement = Arrangement.spacedBy(ContentMarginHalf)
+                ) {
+                    itemsIndexed(tabs) { index, tab ->
+                        FilterChip(
+                            selected = index == pagerState.currentPage,
+                            label = { Text(text = tab.displayText()) },
+                            onClick = {
+                                onTabSelected(index)
+                                scope.launch { pagerState.scrollToPage(index) }
+                            }
+                        )
+                    }
+                }
             }
         }
 

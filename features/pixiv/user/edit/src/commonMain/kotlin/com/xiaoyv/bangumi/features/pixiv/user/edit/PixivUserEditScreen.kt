@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmScaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,7 +75,7 @@ private fun PixivUserEditScreen(
         uiState = uiState,
         onRefresh = { onActionEvent(PixivUserEditEvent.Action.OnRefresh(loading = true)) }
     ) { state ->
-        Scaffold(
+        BgmScaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 BgmTopAppBar(

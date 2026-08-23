@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +37,7 @@ import com.xiaoyv.bangumi.shared.ui.component.emoji.PopupReaction
 import com.xiaoyv.bangumi.shared.ui.component.emoji.ReactionGroup
 import com.xiaoyv.bangumi.shared.ui.component.emoji.rememberPopupReactionState
 import com.xiaoyv.bangumi.shared.ui.component.image.StateImage
+import com.xiaoyv.bangumi.shared.ui.component.layout.BgmListItem
 import com.xiaoyv.bangumi.shared.ui.component.tab.rememberButtonTypeMenu
 import com.xiaoyv.bangumi.shared.ui.component.text.BgmLinkedText
 import com.xiaoyv.bangumi.shared.ui.component.text.StarColor
@@ -66,7 +66,7 @@ fun CommentReplyItem(
     onClickReport: () -> Unit = { },
     onClick: () -> Unit = {},
 ) {
-    ListItem(
+    BgmListItem(
         modifier = Modifier
             .clickable(onClick = onClick)
             .let { if (level == 0) it else it.padding(start = 60.dp) }

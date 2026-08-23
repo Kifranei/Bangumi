@@ -18,6 +18,8 @@
         android:name="android.permission.INSTALL_PACKAGES"
         tools:ignore="ProtectedPermissions" />
 
+    <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"

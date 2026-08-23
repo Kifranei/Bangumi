@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,9 +52,14 @@ import com.xiaoyv.bangumi.shared.ui.component.divider.BgmHorizontalDivider
 import com.xiaoyv.bangumi.shared.ui.component.layout.BgmRequireLoginLayout
 import com.xiaoyv.bangumi.shared.ui.component.layout.LocalCollapsingPullRefresh
 import com.xiaoyv.bangumi.shared.ui.component.layout.refresh.PullToRefreshBox
+import com.xiaoyv.bangumi.shared.ui.component.layout.refresh.rememberBgmPullToRefreshState
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
+import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import org.jetbrains.compose.resources.stringResource
+import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 
 @Composable
 fun rememberCacheWindowLazyListState(
@@ -92,7 +96,7 @@ fun <T> StateLayout(
 ) {
     if (enablePullRefresh) {
         var isRefreshing by rememberSaveable { mutableStateOf(false) }
-        val pullRefreshState = rememberPullToRefreshState()
+        val pullRefreshState = rememberBgmPullToRefreshState()
 
         LaunchedEffect(uiState) {
             if (uiState.status !is PageStatus.Loading) isRefreshing = false
@@ -106,13 +110,14 @@ fun <T> StateLayout(
                 onRefresh(false)
             },
             enabled = LocalCollapsingPullRefresh.current,
+            indicatorPaddingTop = pullRefreshIndicatorPaddingTop,
             indicator = {
                 Indicator(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(top = pullRefreshIndicatorPaddingTop),
                     isRefreshing = isRefreshing,
-                    state = pullRefreshState
+                    state = pullRefreshState.material
                 )
             }
         ) {
@@ -201,8 +206,14 @@ fun StateEmptyLayout(onRefresh: () -> Unit) {
     ) {
         Text(text = "暂无内容")
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedButton(onRefresh) {
-            Text(text = stringResource(Res.string.global_refresh))
+        if (isMiuixUi()) {
+            MiuixButton(onClick = onRefresh) {
+                MiuixText(text = stringResource(Res.string.global_refresh))
+            }
+        } else {
+            OutlinedButton(onRefresh) {
+                Text(text = stringResource(Res.string.global_refresh))
+            }
         }
     }
 }
@@ -242,8 +253,17 @@ fun StateErrorLayout(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Button(onClick = { onRefresh(true) }) {
-                Text(text = stringResource(Res.string.global_refresh))
+            if (isMiuixUi()) {
+                MiuixButton(
+                    onClick = { onRefresh(true) },
+                    colors = MiuixButtonDefaults.buttonColorsPrimary(),
+                ) {
+                    MiuixText(text = stringResource(Res.string.global_refresh))
+                }
+            } else {
+                Button(onClick = { onRefresh(true) }) {
+                    Text(text = stringResource(Res.string.global_refresh))
+                }
             }
         }
 
